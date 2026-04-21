@@ -553,7 +553,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
 
   if (isMobile) {
     return (
-      <div style={{display:'flex',flexDirection:'column',flex:1,overflow:'hidden',minHeight:0}}>
+      <div style={{display:'flex',flexDirection:'column',height:'100%',overflow:'hidden'}}>
 
         {/* ── MOBILE CONFIG ROW ── */}
         <div style={{borderBottom:'1px solid var(--border)',background:'var(--surface)',flexShrink:0,overflowX:'auto'}}>
@@ -619,7 +619,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         </div>
 
         {/* ── VIEWER ── */}
-        <div style={{position:'relative',background:'#080808',flex:1,minHeight:0}}>
+        <div style={{position:'relative',background:'#080808',flex:1,minHeight:0,maxHeight:'38vh'}}>
           <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick" onFps={setFps}/>
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,pointerEvents:'none'}}>
@@ -642,7 +642,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         </div>
 
         {/* ── LOGS (always visible) ── */}
-        <div style={{height:running?110:70,borderTop:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',flexShrink:0,transition:'height 0.3s ease'}}>
+        <div style={{height:running?90:55,borderTop:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',flexShrink:0,transition:'height 0.3s ease'}}>
           {running && (
             <div style={{padding:'4px 12px',borderBottom:'1px solid var(--border2)',display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
               {pipeSteps.map((step,i)=>(
