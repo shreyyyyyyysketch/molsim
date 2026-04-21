@@ -641,19 +641,44 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
           </div>
         </div>
 
-        {/* ── LOGS (compact on mobile, hidden when idle) ── */}
-        {pipeStatus!=='idle'&&(
-          <div style={{height:100,borderTop:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',flexShrink:0}}>
-            <div ref={logBodyRef} style={{flex:1,overflowY:'auto',padding:'6px 12px',display:'flex',flexDirection:'column',gap:1}}>
-              {pipeLogs.map((log,i)=>(
-                <div key={i} style={{display:'flex',gap:6,alignItems:'flex-start',...mono,fontSize:9,lineHeight:1.4}}>
-                  <span style={{color:'var(--text-dim)',flexShrink:0}}>{log.time}</span>
-                  <span style={{color:{info:'var(--text-mid)',success:'#5a9',warn:'#b8963a',data:'var(--accent)',error:'#c06060'}[log.type]||'var(--text-mid)'}}>{log.text}</span>
+        {/* ── LOGS (always visible) ── */}
+        <div style={{height:running?110:70,borderTop:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',flexShrink:0,transition:'height 0.3s ease'}}>
+          {running && (
+            <div style={{padding:'4px 12px',borderBottom:'1px solid var(--border2)',display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+              {pipeSteps.map((step,i)=>(
+                <div key={i} style={{flex:1,display:'flex',flexDirection:'column',gap:2,alignItems:'center'}}>
+                  <div style={{width:'100%',height:3,background:'var(--border)',overflow:'hidden',borderRadius:1}}>
+                    <div style={{
+                      height:'100%',borderRadius:1,
+                      background:step.error?'var(--red)':step.done?'var(--accent)':'var(--accent)',
+                      width:step.done?'100%':step.active?'65%':'0%',
+                      opacity:step.active?0.6:1,
+                      transition:'width 0.8s ease-out',
+                      animation:step.active?'pulse 1.5s ease-in-out infinite':'none',
+                    }}/>
+                  </div>
+                  <div style={{...mono,fontSize:7,color:step.done?'#5a9':step.active?'var(--accent)':'var(--text-dim)',letterSpacing:'0.04em',textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',maxWidth:'100%',textOverflow:'ellipsis'}}>
+                    {step.active?'▶ '+step.name.split(' ')[0]:step.done?(step.error?'✗':'✓'):step.name.split(' ')[0]}
+                  </div>
                 </div>
               ))}
+              <div style={{...mono,fontSize:8,color:'var(--text-dim)',flexShrink:0,paddingLeft:6,borderLeft:'1px solid var(--border2)'}}>
+                {Math.floor(elapsedSec/60).toString().padStart(2,'0')}:{(elapsedSec%60).toString().padStart(2,'0')}
+              </div>
             </div>
+          )}
+          <div ref={logBodyRef} style={{flex:1,overflowY:'auto',padding:'5px 12px',display:'flex',flexDirection:'column',gap:1}}>
+            {pipeLogs.length===0 && (
+              <div style={{...mono,fontSize:9,color:'var(--text-dim)',opacity:0.4,padding:'4px 0'}}>Ready — enter a reaction prompt below</div>
+            )}
+            {pipeLogs.map((log,i)=>(
+              <div key={i} style={{display:'flex',gap:6,alignItems:'flex-start',...mono,fontSize:9,lineHeight:1.4}}>
+                <span style={{color:'var(--text-dim)',flexShrink:0}}>{log.time}</span>
+                <span style={{color:{info:'var(--text-mid)',success:'#5a9',warn:'#b8963a',data:'var(--accent)',error:'#c06060'}[log.type]||'var(--text-mid)'}}>{log.text}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* ── PROMPT BAR ── */}
         <div style={{borderTop:'1px solid var(--border)',padding:'10px 12px',display:'flex',gap:8,alignItems:'flex-end',background:'var(--surface)',flexShrink:0}}>
@@ -786,11 +811,39 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
           </div>
         </div>
 
-        <div style={{height:160,borderTop:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',flexShrink:0}}>
-          <div style={{display:'flex',alignItems:'center',padding:'8px 14px',borderBottom:'1px solid var(--border2)',gap:8}}>
+        <div style={{height:running?180:120,borderTop:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',flexShrink:0,transition:'height 0.3s ease'}}>
+          <div style={{display:'flex',alignItems:'center',padding:'7px 14px',borderBottom:'1px solid var(--border2)',gap:8,flexShrink:0}}>
             <div style={{...mono,fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--text-dim)',flex:1}}>Laboratory Console</div>
+            {running && <div style={{...mono,fontSize:8,color:'var(--accent)',letterSpacing:'0.08em',animation:'pulse 1.5s ease-in-out infinite'}}>● LIVE</div>}
           </div>
-          <div ref={logBodyRef} style={{flex:1,overflowY:'auto',padding:'8px 14px',display:'flex',flexDirection:'column',gap:2}}>
+          {running && pipeSteps.length>0 && (
+            <div style={{display:'flex',gap:4,padding:'8px 14px',borderBottom:'1px solid var(--border2)',flexShrink:0}}>
+              {pipeSteps.map((step,i)=>(
+                <div key={i} style={{flex:1,display:'flex',flexDirection:'column',gap:3}}>
+                  <div style={{width:'100%',height:3,background:'var(--border)',overflow:'hidden',borderRadius:1}}>
+                    <div style={{
+                      height:'100%',borderRadius:1,
+                      background:step.error?'var(--red)':'var(--accent)',
+                      width:step.done?'100%':step.active?'65%':'0%',
+                      opacity:step.active?0.65:1,
+                      transition:'width 0.8s ease-out',
+                      animation:step.active?'pulse 1.5s ease-in-out infinite':'none',
+                    }}/>
+                  </div>
+                  <div style={{...mono,fontSize:7,color:step.done?'#5a9':step.active?'var(--accent)':'var(--text-dim)',letterSpacing:'0.04em',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                    {step.active?'▶ '+step.name:step.done?(step.error?'✗ '+step.name:'✓ '+step.name):step.name}
+                  </div>
+                </div>
+              ))}
+              <div style={{...mono,fontSize:9,color:'var(--text-dim)',flexShrink:0,paddingLeft:10,borderLeft:'1px solid var(--border2)',display:'flex',alignItems:'center'}}>
+                {Math.floor(elapsedSec/60).toString().padStart(2,'0')}:{(elapsedSec%60).toString().padStart(2,'0')}
+              </div>
+            </div>
+          )}
+          <div ref={logBodyRef} style={{flex:1,overflowY:'auto',padding:'7px 14px',display:'flex',flexDirection:'column',gap:2}}>
+            {pipeLogs.length===0 && (
+              <div style={{...mono,fontSize:10,color:'var(--text-dim)',opacity:0.4}}>Ready — enter a reaction prompt below to begin</div>
+            )}
             {pipeLogs.map((log,i)=>(
               <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',...mono,fontSize:10,lineHeight:1.5}}>
                 <span style={{color:'var(--text-dim)',flexShrink:0}}>{log.time}</span>
