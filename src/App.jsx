@@ -4,12 +4,78 @@ import * as THREE from "three"
 // ── CONSTANTS ─────────────────────────────────────────────
 
 const ATOM_COLORS = {
-  C:0x888888,H:0xdddddd,O:0xee4444,N:0x4488ee,
-  Br:0xcc6600,Cl:0x44cc44,S:0xddcc00,F:0x88ddcc,default:0xaaaaaa
+  C:0x404040,H:0xeeeeee,O:0xdd2222,N:0x3366dd,
+  Br:0x994400,Cl:0x22aa22,S:0xddbb00,F:0x22aaaa,
+  P:0xff8800,I:0x994499,default:0x888888
 }
 const ATOM_RADII = {
-  C:0.38,H:0.25,O:0.35,N:0.36,Br:0.5,Cl:0.45,S:0.46,F:0.32,default:0.38
+  C:0.40,H:0.28,O:0.38,N:0.38,Br:0.52,Cl:0.47,S:0.48,F:0.33,P:0.46,I:0.58,default:0.40
 }
+
+const C60_SYMBOLS = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C']
+const C60_POSITIONS = [
+  [0.8475,3.0661,2.7424],
+  [-0.8475,-3.0661,2.7424],
+  [-1.3712,1.6949,-3.5899],
+  [0.0,-0.8475,-4.1136],
+  [-1.6949,3.5899,1.3712],
+  [-3.0661,2.7424,0.8475],
+  [-3.0661,2.7424,-0.8475],
+  [3.5899,-1.3712,-1.6949],
+  [-0.8475,-4.1136,0.0],
+  [2.7424,-0.8475,-3.0661],
+  [0.8475,-3.0661,-2.7424],
+  [-0.8475,3.0661,2.7424],
+  [4.1136,0.0,-0.8475],
+  [3.0661,-2.7424,-0.8475],
+  [1.6949,-3.5899,-1.3712],
+  [0.8475,4.1136,0.0],
+  [4.1136,0.0,0.8475],
+  [3.0661,-2.7424,0.8475],
+  [1.3712,-1.6949,3.5899],
+  [-2.7424,0.8475,3.0661],
+  [-4.1136,0.0,-0.8475],
+  [0.0,0.8475,4.1136],
+  [-0.8475,4.1136,0.0],
+  [-4.1136,0.0,0.8475],
+  [0.8475,3.0661,-2.7424],
+  [1.6949,-3.5899,1.3712],
+  [1.3712,-1.6949,-3.5899],
+  [-0.8475,-3.0661,-2.7424],
+  [-1.6949,-3.5899,-1.3712],
+  [-2.7424,-0.8475,3.0661],
+  [3.0661,2.7424,-0.8475],
+  [1.3712,1.6949,3.5899],
+  [3.0661,2.7424,0.8475],
+  [-1.6949,-3.5899,1.3712],
+  [-2.7424,0.8475,-3.0661],
+  [3.5899,1.3712,1.6949],
+  [0.0,-0.8475,4.1136],
+  [-3.5899,-1.3712,1.6949],
+  [1.3712,1.6949,-3.5899],
+  [2.7424,0.8475,3.0661],
+  [-3.5899,1.3712,1.6949],
+  [-1.3712,-1.6949,3.5899],
+  [-0.8475,3.0661,-2.7424],
+  [0.0,0.8475,-4.1136],
+  [-2.7424,-0.8475,-3.0661],
+  [-3.5899,1.3712,-1.6949],
+  [1.6949,3.5899,-1.3712],
+  [3.5899,-1.3712,1.6949],
+  [0.8475,-3.0661,2.7424],
+  [-1.3712,-1.6949,-3.5899],
+  [-3.0661,-2.7424,0.8475],
+  [-3.0661,-2.7424,-0.8475],
+  [2.7424,0.8475,-3.0661],
+  [1.6949,3.5899,1.3712],
+  [0.8475,-4.1136,0.0],
+  [-1.3712,1.6949,3.5899],
+  [2.7424,-0.8475,3.0661],
+  [3.5899,1.3712,-1.6949],
+  [-1.6949,3.5899,-1.3712],
+  [-3.5899,-1.3712,-1.6949]
+]
+
 const STEP_NAMES = ['LLM Gateway','Geodesic TS','Solvation','MACE + DFT','Surface Hop','Kinetic Summary']
 const SOLVENTS = [
   {value:'water',label:'Water'},{value:'methanol',label:'Methanol'},
@@ -19,18 +85,7 @@ const SOLVENTS = [
   {value:'chloroform',label:'Chloroform'},{value:'toluene',label:'Toluene'},
   {value:'hexane',label:'Hexane'},{value:'gas phase',label:'Gas Phase'},
 ]
-const DEMO_MOL = {
-  symbols:['C','H','H','H','Br'],
-  positions:[[0,0,0],[0.63,0.63,0.63],[-0.63,-0.63,0.63],[-0.63,0.63,-0.63],[0,0,-2]]
-}
-const LIBRARY_ITEMS = [
-  {id:'MD-2026-001',status:'ACTIVE',title:'SN2 Hydroxide Displacement',desc:'Nucleophilic substitution of bromomethane with hydroxide in aqueous solution.',tags:['SN2','IONIC'],mode:'accurate',barrier:'24.3 kcal/mol',date:'2h ago'},
-  {id:'MD-2026-002',status:'ARCHIVED',title:'Diels–Alder Cycloaddition',desc:'Concerted [4+2] cycloaddition between butadiene and ethylene in gas phase.',tags:['PERICYCLIC','CONCERTED'],mode:'fast',barrier:'18.7 kcal/mol',date:'5h ago'},
-  {id:'MD-2026-003',status:'DRAFT',title:'E2 Elimination — KOH/EtOH',desc:'Bimolecular elimination of 2-bromopropane in ethanol with potassium hydroxide.',tags:['E2','BASE'],mode:'accurate',barrier:'31.2 kcal/mol',date:'1d ago'},
-  {id:'MD-2026-004',status:'ACTIVE',title:'Aldol Condensation',desc:'Base-catalyzed aldol reaction between acetaldehyde molecules.',tags:['CARBONYL','ENOLATE'],mode:'fast',barrier:'14.9 kcal/mol',date:'2d ago'},
-  {id:'MD-2026-005',status:'COMPLETE',title:'Michael Addition',desc:'Conjugate addition of dimethylamine to methyl acrylate.',tags:['ADDITION','AMINE'],mode:'fast',barrier:'11.4 kcal/mol',date:'3d ago'},
-  {id:'MD-2026-006',status:'ACTIVE',title:'Grignard Formation',desc:'Oxidative addition of bromomethane to magnesium in THF.',tags:['ORGANOMET','THF'],mode:'accurate',barrier:'8.2 kcal/mol',date:'4d ago'},
-]
+// Library items are built from real completed simulations only
 
 // ── THREE.JS PURE FUNCTIONS (no React) ────────────────────
 
@@ -39,29 +94,42 @@ function threeBuild(symbols, positions) {
   let cx=0,cy=0,cz=0
   positions.forEach(p=>{cx+=p[0];cy+=p[1];cz+=p[2]})
   cx/=positions.length;cy/=positions.length;cz/=positions.length
+
+  // Atom spheres — Rowan style: smooth, slightly glossy, clean CPK colors
   symbols.forEach((sym,i)=>{
-    const color=ATOM_COLORS[sym]??ATOM_COLORS.default
-    const r=(ATOM_RADII[sym]??ATOM_RADII.default)*1.8
-    const mesh=new THREE.Mesh(
-      new THREE.SphereGeometry(r,20,16),
-      new THREE.MeshStandardMaterial({color,metalness:0.1,roughness:0.4,emissive:color,emissiveIntensity:0.04})
+    const color = ATOM_COLORS[sym] ?? ATOM_COLORS.default
+    const r = (ATOM_RADII[sym] ?? ATOM_RADII.default) * 1.6
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(r, 32, 24),
+      new THREE.MeshStandardMaterial({
+        color, metalness:0.0, roughness:0.25,
+        envMapIntensity:0.4,
+      })
     )
-    mesh.position.set(positions[i][0]-cx,positions[i][1]-cy,positions[i][2]-cz)
+    mesh.position.set(positions[i][0]-cx, positions[i][1]-cy, positions[i][2]-cz)
+    mesh.castShadow = true
     group.add(mesh)
   })
+
+  // Bonds — Rowan uses thick dark grey cylinders
+  const bondMat = new THREE.MeshStandardMaterial({color:0x222222, roughness:0.5, metalness:0.0})
   for(let i=0;i<positions.length;i++){
     for(let j=i+1;j<positions.length;j++){
       const [x1,y1,z1]=positions[i],[x2,y2,z2]=positions[j]
       const d=Math.sqrt((x2-x1)**2+(y2-y1)**2+(z2-z1)**2)
-      if(d<2.0&&!(symbols[i]==='H'&&symbols[j]==='H')){
-        const mid=new THREE.Vector3((x1+x2)/2-cx,(y1+y2)/2-cy,(z1+z2)/2-cz)
-        const dir=new THREE.Vector3(x2-x1,y2-y1,z2-z1).normalize()
-        const bond=new THREE.Mesh(
-          new THREE.CylinderGeometry(0.06,0.06,d,8),
-          new THREE.MeshStandardMaterial({color:0x444444,roughness:0.7})
+      // Bond threshold: skip H-H, use 1.9 for most, 2.3 for heavy atoms
+      const isH = symbols[i]==='H'||symbols[j]==='H'
+      const thresh = isH ? 1.4 : 2.0
+      if(d < thresh && !(symbols[i]==='H'&&symbols[j]==='H')){
+        const mid = new THREE.Vector3((x1+x2)/2-cx,(y1+y2)/2-cy,(z1+z2)/2-cz)
+        const dir = new THREE.Vector3(x2-x1,y2-y1,z2-z1).normalize()
+        const bond = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.09, 0.09, d, 12),
+          bondMat
         )
         bond.position.copy(mid)
-        bond.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir)
+        bond.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir)
+        bond.castShadow = true
         group.add(bond)
       }
     }
@@ -137,11 +205,14 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
     t.current.renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true})
     t.current.renderer.setSize(W,H)
     t.current.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2))
-    t.current.renderer.setClearColor(0x000000,0)
+    t.current.renderer.setClearColor(0xffffff, 1)
+    t.current.renderer.shadowMap.enabled = true
 
-    const amb=new THREE.AmbientLight(0xffffff,0.4); t.current.scene.add(amb)
-    const dir=new THREE.DirectionalLight(0xffffff,0.8); dir.position.set(5,10,8); t.current.scene.add(dir)
-    const pt=new THREE.PointLight(0xc8b89a,0.6,30); pt.position.set(-4,4,4); t.current.scene.add(pt)
+    // Rowan-style lighting: bright ambient + two directional for depth
+    const amb=new THREE.AmbientLight(0xffffff, 0.85); t.current.scene.add(amb)
+    const dir1=new THREE.DirectionalLight(0xffffff, 0.9); dir1.position.set(6,10,8); dir1.castShadow=true; t.current.scene.add(dir1)
+    const dir2=new THREE.DirectionalLight(0xffffff, 0.3); dir2.position.set(-6,-4,-6); t.current.scene.add(dir2)
+    const fill=new THREE.DirectionalLight(0xeef4ff, 0.2); fill.position.set(0,0,10); t.current.scene.add(fill)
 
     let drag=false,px=0,py=0
     canvas.addEventListener('mousedown',e=>{drag=true;px=e.clientX;py=e.clientY})
@@ -190,7 +261,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
       t.current.renderer.render(t.current.scene,t.current.camera)
       fc++
       const now=performance.now()
-      if(now-fpsT>1000){onFps?.(fc);fc=0;fpsT=now}
+      if(now-fpsT>1000){fc=0;fpsT=now}
     }
     animate()
 
@@ -206,7 +277,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
   useImperativeHandle(ref,()=>({
     showDemo:()=>{
       threeClear(t.current)
-      const g=threeBuild(DEMO_MOL.symbols,DEMO_MOL.positions)
+      const g=threeBuild(C60_SYMBOLS, C60_POSITIONS)
       t.current.scene.add(g); t.current.molecules.push(g)
     },
     setIRC:(frames,symbols)=>{
@@ -243,7 +314,7 @@ function threeBuildWork(s,p) {
     const r=(ATOM_RADII[sym]??ATOM_RADII.default)*1.8
     const mesh=new THREE.Mesh(
       new THREE.SphereGeometry(r,20,16),
-      new THREE.MeshStandardMaterial({color,metalness:0.1,roughness:0.4,emissive:color,emissiveIntensity:0.04})
+      new THREE.MeshStandardMaterial({color,metalness:0.05,roughness:0.35,emissive:0x000000,emissiveIntensity:0})
     )
     mesh.position.set(p[i][0]-cx,p[i][1]-cy,p[i][2]-cz)
     group.add(mesh)
@@ -254,7 +325,7 @@ function threeBuildWork(s,p) {
     if(d<2.0&&!(s[i]==='H'&&s[j]==='H')){
       const bond=new THREE.Mesh(
         new THREE.CylinderGeometry(0.06,0.06,d,8),
-        new THREE.MeshStandardMaterial({color:0x444444,roughness:0.7})
+        new THREE.MeshStandardMaterial({color:0x888880,roughness:0.6})
       )
       bond.position.set((x1+x2)/2-cx,(y1+y2)/2-cy,(z1+z2)/2-cz)
       bond.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(x2-x1,y2-y1,z2-z1).normalize())
@@ -497,7 +568,6 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
   viewerRef, barrier, rxnVal, rateStr, rateUnits, ircFrames, energyMethod,
   saddleFound, pipeResult, s4, onRun, onCancel, settings }) {
 
-  const [fps, setFps] = useState(60)
   const [showMetrics, setShowMetrics] = useState(false)
   const running = pipeStatus === 'running'
   const isMobile = window.innerWidth <= 768
@@ -553,7 +623,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
 
   if (isMobile) {
     return (
-      <div style={{display:'flex',flexDirection:'column',height:'100%',overflow:'hidden'}}>
+      <div style={{display:'flex',flexDirection:'column',height:'100dvh',overflow:'hidden'}}>
 
         {/* ── MOBILE CONFIG ROW ── */}
         <div style={{borderBottom:'1px solid var(--border)',background:'var(--surface)',flexShrink:0,overflowX:'auto'}}>
@@ -606,7 +676,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
                 {pipeSteps.map((step,i)=>(
                   <div key={i} style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
                     <div style={{flex:1,height:2,background:'var(--border)',overflow:'hidden'}}>
-                      <div style={{height:'100%',background:step.error?'var(--red)':'var(--accent)',width:step.done?'100%':step.active?'60%':'0%',transition:'width 0.6s ease-out'}}/>
+                      <div style={{height:'100%',background:step.error?'var(--red)':'var(--accent)',width:step.done?'100%':'0%',transition:step.done?'width 0.5s ease-out':'none',animation:step.active?'slideIndeterminate 1.8s ease-in-out infinite':'none'}}/>
                     </div>
                     <div style={{...mono,fontSize:8,color:step.done?(step.error?'#c06060':'#5a9'):'var(--text-dim)',width:10,textAlign:'center'}}>
                       {step.done?(step.error?'✗':'✓'):(step.active?'…':'·')}
@@ -619,24 +689,39 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         </div>
 
         {/* ── VIEWER ── */}
-        <div style={{position:'relative',background:'#080808',flex:1,minHeight:0,maxHeight:'38vh'}}>
-          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick" onFps={setFps}/>
+        <div style={{position:'relative',background:'#ffffff',flex:1,minHeight:0,maxHeight:'calc(100dvh - 230px)'}}>
+          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,pointerEvents:'none'}}>
               <div style={{fontSize:32,opacity:0.08}}>⬡</div>
-              <div style={{...serif,fontStyle:'italic',fontSize:13,color:'var(--text-dim)',opacity:0.4}}>No simulation active</div>
+              <div style={{...serif,fontStyle:'italic',fontSize:13,color:'var(--text-dim)',opacity:0.5}}>No simulation active</div>
+            </div>
+          )}
+          {pipeStatus==='idle'&&viewerRef.current?.hasMol?.()&&(
+            <div style={{position:'absolute',bottom:46,left:0,right:0,display:'flex',justifyContent:'center',pointerEvents:'none'}}>
+              <div style={{background:'rgba(255,255,255,0.92)',border:'1px solid var(--border)',padding:'4px 12px',display:'flex',flexDirection:'column',alignItems:'center',gap:1,backdropFilter:'blur(8px)'}}>
+                <div style={{...serif,fontStyle:'italic',fontSize:11,color:'var(--text)',letterSpacing:'0.02em'}}>Buckminsterfullerene</div>
+                <div style={{...mono,fontSize:7,color:'var(--text-dim)',letterSpacing:'0.12em'}}>C₆₀ · DEMO MOLECULE</div>
+              </div>
             </div>
           )}
           <div style={{position:'absolute',top:10,left:10,display:'flex',gap:6,alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',gap:4,background:'rgba(0,0,0,0.75)',border:'1px solid var(--border)',padding:'3px 8px',...mono,fontSize:8,color:'var(--text-mid)',backdropFilter:'blur(8px)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:4,background:'rgba(255,255,255,0.9)',border:'1px solid var(--border)',padding:'3px 8px',...mono,fontSize:8,color:'var(--text-mid)',backdropFilter:'blur(8px)'}}>
               <div style={{width:4,height:4,borderRadius:'50%',background:running?'#4a7':'var(--text-dim)',animation:running?'pulse 1.2s ease-in-out infinite':'none'}}/>
               {running?'LIVE':pipeStatus==='complete'?'COMPLETE':'IDLE'}
             </div>
-            <div style={{background:'rgba(0,0,0,0.75)',border:'1px solid var(--border)',padding:'3px 8px',...mono,fontSize:8,color:'var(--text-dim)',backdropFilter:'blur(8px)'}}>{fps} FPS</div>
           </div>
+          {pipeStatus==='idle'&&viewerRef.current?.hasMol?.()&&(
+            <div style={{position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',pointerEvents:'none'}}>
+              <div style={{background:'rgba(255,255,255,0.92)',border:'1px solid var(--border)',padding:'5px 16px',display:'flex',flexDirection:'column',alignItems:'center',gap:1,backdropFilter:'blur(8px)'}}>
+                <div style={{...serif,fontStyle:'italic',fontSize:13,color:'var(--text)',letterSpacing:'0.02em'}}>Buckminsterfullerene</div>
+                <div style={{...mono,fontSize:8,color:'var(--text-dim)',letterSpacing:'0.12em'}}>C₆₀ · DEMO MOLECULE</div>
+              </div>
+            </div>
+          )}
           <div style={{position:'absolute',bottom:10,right:10,display:'flex',gap:6}}>
             {[{icon:'↺',fn:()=>viewerRef.current?.resetView()},{icon:'⤢',fn:()=>viewerRef.current?.fullscreen()}].map(b=>(
-              <div key={b.icon} onClick={b.fn} style={{width:28,height:28,background:'rgba(0,0,0,0.75)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'var(--text-dim)',fontSize:11,backdropFilter:'blur(8px)'}}>{b.icon}</div>
+              <div key={b.icon} onClick={b.fn} style={{width:28,height:28,background:'rgba(255,255,255,0.9)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'var(--text-dim)',fontSize:11,backdropFilter:'blur(8px)'}}>{b.icon}</div>
             ))}
           </div>
         </div>
@@ -651,10 +736,10 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
                     <div style={{
                       height:'100%',borderRadius:1,
                       background:step.error?'var(--red)':step.done?'var(--accent)':'var(--accent)',
-                      width:step.done?'100%':step.active?'65%':'0%',
-                      opacity:step.active?0.6:1,
-                      transition:'width 0.8s ease-out',
-                      animation:step.active?'pulse 1.5s ease-in-out infinite':'none',
+                      width:step.done?'100%':step.active?'40%':'0%',
+                      opacity:1,
+                      transition:step.done?'width 0.5s ease-out':'none',
+                      animation:step.active?'slideIndeterminate 1.8s ease-in-out infinite':'none',
                     }}/>
                   </div>
                   <div style={{...mono,fontSize:7,color:step.done?'#5a9':step.active?'var(--accent)':'var(--text-dim)',letterSpacing:'0.04em',textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',maxWidth:'100%',textOverflow:'ellipsis'}}>
@@ -681,16 +766,17 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         </div>
 
         {/* ── PROMPT BAR ── */}
-        <div style={{borderTop:'1px solid var(--border)',padding:'10px 12px',display:'flex',gap:8,alignItems:'flex-end',background:'var(--surface)',flexShrink:0}}>
+        <div style={{borderTop:'2px solid var(--accent)',padding:'10px 12px',display:'flex',gap:8,alignItems:'flex-end',background:'var(--surface)',flexShrink:0,minHeight:56}}>
           <div style={{flex:1,border:'1px solid var(--border)',background:'var(--surface2)',display:'flex',alignItems:'center',gap:6,padding:'0 10px'}}>
             <span style={{color:'var(--text-dim)',fontSize:10,flexShrink:0}}>⬡</span>
             <textarea value={prompt} onChange={e=>setPrompt(e.target.value)}
               onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();onRun()}}}
+              onChange={e=>{setPrompt(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,72)+'px'}}
               placeholder="Describe a reaction…"
               rows={1} style={{
                 flex:1,background:'transparent',border:'none',padding:'8px 0',
                 color:'var(--text)',...sans,fontSize:12,outline:'none',resize:'none',
-                minHeight:34,maxHeight:72,
+                minHeight:34,maxHeight:72,overflow:'hidden',
               }}/>
           </div>
           <div style={{display:'flex',gap:6,flexShrink:0}}>
@@ -763,7 +849,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
               <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'3px 0'}}>
                 <div style={{...mono,fontSize:8,color:'var(--text-dim)',width:14,flexShrink:0}}>{String(i+1).padStart(2,'0')}</div>
                 <div style={{flex:1,height:2,background:'var(--border)',overflow:'hidden'}}>
-                  <div style={{height:'100%',background:step.error?'var(--red)':'var(--accent)',width:step.done?'100%':step.active?'60%':'0%',transition:'width 0.6s ease-out'}}/>
+                  <div style={{height:'100%',background:step.error?'var(--red)':'var(--accent)',width:step.done?'100%':'0%',transition:step.done?'width 0.5s ease-out':'none',animation:step.active?'slideIndeterminate 1.8s ease-in-out infinite':'none'}}/>
                 </div>
                 <div style={{...mono,fontSize:8,color:step.done?(step.error?'#c06060':'#5a9'):'var(--text-dim)',width:14,textAlign:'center',flexShrink:0}}>
                   {step.done?(step.error?'✗':'✓'):(step.active?'…':'·')}
@@ -782,11 +868,11 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
       {/* CENTER */}
       <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
         <div style={{flex:1,position:'relative',background:'#080808',minHeight:0}}>
-          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick" onFps={setFps}/>
+          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,pointerEvents:'none'}}>
               <div style={{fontSize:40,opacity:0.08}}>⬡</div>
-              <div style={{...serif,fontStyle:'italic',fontSize:16,color:'var(--text-dim)',opacity:0.4}}>No simulation active</div>
+              <div style={{...serif,fontStyle:'italic',fontSize:16,color:'var(--text-dim)',opacity:0.5}}>No simulation active</div>
               <div style={{...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.1em',opacity:0.3}}>Enter a reaction prompt below to begin</div>
             </div>
           )}
@@ -795,7 +881,6 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
               <div style={{width:5,height:5,borderRadius:'50%',background:running?'#4a7':'var(--text-dim)',animation:running?'pulse 1.2s ease-in-out infinite':'none'}}/>
               {running?'LIVE':pipeStatus==='complete'?'COMPLETE':'IDLE'}
             </div>
-            <div style={{background:'rgba(0,0,0,0.7)',border:'1px solid var(--border)',padding:'4px 10px',...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.1em',backdropFilter:'blur(8px)'}}>{fps} FPS</div>
           </div>
           <div style={{position:'absolute',bottom:16,right:16,display:'flex',gap:8}}>
             {[{icon:'↺',fn:()=>viewerRef.current?.resetView()},{icon:'⤢',fn:()=>viewerRef.current?.fullscreen()}].map(b=>(
@@ -957,7 +1042,7 @@ function AnalyticsTab({ energyProfile, ircFrames, s4, pipeResult }) {
 // ── LIBRARY PAGE ──────────────────────────────────────────
 
 function LibraryPage({ simulations, onOpen }) {
-  const all = [...simulations, ...LIBRARY_ITEMS]
+  const all = [...simulations]
   return (
     <div style={{flex:1,overflow:'hidden',display:'flex',flexDirection:'column'}}>
       <div style={{padding:'28px 32px 20px',borderBottom:'1px solid var(--border)',flexShrink:0,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
@@ -967,6 +1052,13 @@ function LibraryPage({ simulations, onOpen }) {
         </div>
       </div>
       <div style={{flex:1,overflowY:'auto',padding:'24px 32px',display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20,alignContent:'start'}}>
+        {all.length===0&&(
+          <div style={{gridColumn:'1/-1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'80px 0',gap:12,opacity:0.5}}>
+            <div style={{fontSize:36}}>⬡</div>
+            <div style={{...serif,fontStyle:'italic',fontSize:18,color:'var(--text-dim)'}}>No simulations yet</div>
+            <div style={{fontSize:11,color:'var(--text-dim)',textAlign:'center',maxWidth:300,lineHeight:1.6}}>Run a reaction from the dashboard and your results will appear here.</div>
+          </div>
+        )}
         {all.map((item,i)=>(
           <div key={item.id} onClick={()=>onOpen(item)} style={{border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',transition:'border-color 0.2s',overflow:'hidden'}}
             onMouseEnter={e=>e.currentTarget.style.borderColor='var(--accent)'}
@@ -1056,14 +1148,7 @@ function SettingsPage({ settings, setSettings, mode, setMode }) {
         )},
         {num:'PART III',title:'Interface',desc:'Rendering preferences and display options.',fields:(
           <>
-            {field('3D Renderer FPS Cap',(
-              <div style={{position:'relative'}}>
-                <select value={draft.fpsCap} onChange={e=>setDraft(d=>({...d,fpsCap:parseInt(e.target.value)}))} style={{width:'100%',background:'var(--surface2)',border:'1px solid var(--border)',color:'var(--text)',padding:'9px 12px',...mono,fontSize:11,outline:'none',appearance:'none',WebkitAppearance:'none'}}>
-                  {[60,30,0].map(v=><option key={v} value={v}>{v||'Uncapped'} FPS</option>)}
-                </select>
-                <span style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',color:'var(--text-dim)',fontSize:10,pointerEvents:'none'}}>▾</span>
-              </div>
-            ))}
+
             {field('Atom Style',(
               <div style={{position:'relative'}}>
                 <select value={draft.atomStyle} onChange={e=>setDraft(d=>({...d,atomStyle:e.target.value}))} style={{width:'100%',background:'var(--surface2)',border:'1px solid var(--border)',color:'var(--text)',padding:'9px 12px',...mono,fontSize:11,outline:'none',appearance:'none',WebkitAppearance:'none'}}>
@@ -1120,6 +1205,7 @@ export default function App() {
   const elapsedTimer = useRef(null)
   const logBodyRef = useRef(null)
   const viewerRef  = useRef(null)
+  const pollErrCount = useRef(0)
 
   // Config
   const [solvent, setSolvent] = useState('water')
@@ -1174,12 +1260,12 @@ export default function App() {
         const data = await resp.json()
 
         if(data.status==='running') {
-          // Estimate active step from elapsed time
-          const elapsed = Math.floor((Date.now()-startTime.current)/1000)
-          const durations = mode==='fast'?[5,15,5,80,5,5]:[5,15,5,360,5,5]
-          let cum=0,active=0
-          for(let i=0;i<durations.length;i++){cum+=durations[i];if(elapsed<cum){active=i;break;}active=i}
-          setPipeSteps(STEP_NAMES.map((n,i)=>({name:n,done:i<active,active:i===active,error:false})))
+          // Real step info from backend if available, otherwise just show running state
+          if(data.current_step != null) {
+            const stepIdx = data.current_step - 1
+            setPipeSteps(STEP_NAMES.map((n,i)=>({name:n,done:i<stepIdx,active:i===stepIdx,error:false})))
+          }
+          // If no step info from backend, keep all steps in pending/pulse state — don't fake it
         }
 
         if(data.status==='complete'){
@@ -1190,15 +1276,21 @@ export default function App() {
         if(data.status==='error'){
           clearInterval(pollTimer.current)
           setPipeStatus('error')
-          addLog(`Pipeline error: ${data.error||'unknown'}`, 'error')
+          setCallId(null)
+          const errMsg = data.error||'unknown'
+          const isStoich = errMsg.toLowerCase().includes('stoich') || errMsg.toLowerCase().includes('smiles') || errMsg.toLowerCase().includes('atom count')
+          addLog(isStoich
+            ? `Step 1 failed: LLM returned invalid SMILES. Try a more specific prompt e.g. "SN2 substitution of bromomethane with hydroxide in water"`
+            : `Pipeline error: ${errMsg}`, 'error')
         }
       } catch(err) {
-        addLog(`Poll error: ${err.message} — retrying`, 'warn')
+        pollErrCount.current = (pollErrCount.current||0) + 1
+        if(pollErrCount.current % 3 === 1) addLog(`Poll error: ${err.message} — retrying`, 'warn')
       }
     }, 3000)
 
     return ()=>clearInterval(pollTimer.current)
-  }, [callId, pipeStatus])
+  }, [callId, pipeStatus, mode])
 
   function getBaseUrl(url) {
     try { return new URL(url).origin } catch { return url.replace(/\/api_pipeline.*$/,'') }
@@ -1208,7 +1300,6 @@ export default function App() {
     setPipeResult(result)
     setPipeStatus('complete')
     const steps = result.steps||[]
-    logStart.current = startTime.current
     steps.forEach((step,i)=>{
       ;(step?.logs||[]).forEach(e=>addLog(e.text,e.type||'info'))
       if(step?.error) addLog(`Step ${i+1} error: ${step.error}`,'error')
@@ -1236,9 +1327,10 @@ export default function App() {
     setPipeLogs([])
     logStart.current=null
     setPipeResult(null)
-    setPipeSteps(STEP_NAMES.map(n=>({name:n,done:false,active:false,error:false})))
+    setPipeSteps(STEP_NAMES.map(n=>({name:n,done:false,active:false,error:false,pending:true})))
     startTime.current=Date.now()
     setElapsedSec(0)
+    pollErrCount.current=0
     const sid=String(sessionCount).padStart(3,'0')+'-ALPHA-'+String(Math.floor(Math.random()*99)).padStart(2,'0')
     setSessionId(sid);setSessionCount(c=>c+1)
     viewerRef.current?.showDemo()
@@ -1306,14 +1398,34 @@ export default function App() {
   }
 
   const globalCss = `
-    @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,700;1,6..96,400;1,6..96,500&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
-    :root{--bg:#0e0e0e;--surface:#141414;--surface2:#1a1a1a;--border:#2a2a2a;--border2:#222;--text:#e8e4dc;--text-dim:#6b6560;--text-mid:#9e9890;--accent:#c8b89a;--accent2:#8fa89e;--green:#4a7c59;--green-dim:#2a3d2f;--red:#7c4a4a}
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap');
+    :root{
+      --bg:#f5f2ee;
+      --surface:#faf8f5;
+      --surface2:#f0ede8;
+      --border:#ddd9d2;
+      --border2:#e8e4de;
+      --text:#1a1714;
+      --text-dim:#9a9189;
+      --text-mid:#6b6358;
+      --accent:#8b6f47;
+      --accent2:#5a7a6e;
+      --green:#3a6b4a;
+      --green-dim:#e8f0eb;
+      --red:#8b3a3a;
+    }
     *{margin:0;padding:0;box-sizing:border-box}
     html,body,#root{height:100%;overflow:hidden;background:var(--bg);color:var(--text)}
-    body{font-family:'Space Grotesk',sans-serif;font-size:13px}
+    body{font-family:'DM Sans',sans-serif;font-size:13px}
     ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border)}
     input,select,textarea,button{font-family:inherit}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    @keyframes slideIndeterminate{
+      0%{width:0%;margin-left:0%}
+      50%{width:60%;margin-left:20%}
+      100%{width:0%;margin-left:100%}
+    }
+    select option{background:#f5f2ee;color:#1a1714}
   `
 
   return (
