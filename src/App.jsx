@@ -12,68 +12,16 @@ const ATOM_RADII = {
   C:0.40,H:0.28,O:0.38,N:0.38,Br:0.52,Cl:0.47,S:0.48,F:0.33,P:0.46,I:0.58,default:0.40
 }
 
-const C60_SYMBOLS = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C']
-const C60_POSITIONS = [
-  [0.8475,3.0661,2.7424],
-  [-0.8475,-3.0661,2.7424],
-  [-1.3712,1.6949,-3.5899],
-  [0.0,-0.8475,-4.1136],
-  [-1.6949,3.5899,1.3712],
-  [-3.0661,2.7424,0.8475],
-  [-3.0661,2.7424,-0.8475],
-  [3.5899,-1.3712,-1.6949],
-  [-0.8475,-4.1136,0.0],
-  [2.7424,-0.8475,-3.0661],
-  [0.8475,-3.0661,-2.7424],
-  [-0.8475,3.0661,2.7424],
-  [4.1136,0.0,-0.8475],
-  [3.0661,-2.7424,-0.8475],
-  [1.6949,-3.5899,-1.3712],
-  [0.8475,4.1136,0.0],
-  [4.1136,0.0,0.8475],
-  [3.0661,-2.7424,0.8475],
-  [1.3712,-1.6949,3.5899],
-  [-2.7424,0.8475,3.0661],
-  [-4.1136,0.0,-0.8475],
-  [0.0,0.8475,4.1136],
-  [-0.8475,4.1136,0.0],
-  [-4.1136,0.0,0.8475],
-  [0.8475,3.0661,-2.7424],
-  [1.6949,-3.5899,1.3712],
-  [1.3712,-1.6949,-3.5899],
-  [-0.8475,-3.0661,-2.7424],
-  [-1.6949,-3.5899,-1.3712],
-  [-2.7424,-0.8475,3.0661],
-  [3.0661,2.7424,-0.8475],
-  [1.3712,1.6949,3.5899],
-  [3.0661,2.7424,0.8475],
-  [-1.6949,-3.5899,1.3712],
-  [-2.7424,0.8475,-3.0661],
-  [3.5899,1.3712,1.6949],
-  [0.0,-0.8475,4.1136],
-  [-3.5899,-1.3712,1.6949],
-  [1.3712,1.6949,-3.5899],
-  [2.7424,0.8475,3.0661],
-  [-3.5899,1.3712,1.6949],
-  [-1.3712,-1.6949,3.5899],
-  [-0.8475,3.0661,-2.7424],
-  [0.0,0.8475,-4.1136],
-  [-2.7424,-0.8475,-3.0661],
-  [-3.5899,1.3712,-1.6949],
-  [1.6949,3.5899,-1.3712],
-  [3.5899,-1.3712,1.6949],
-  [0.8475,-3.0661,2.7424],
-  [-1.3712,-1.6949,-3.5899],
-  [-3.0661,-2.7424,0.8475],
-  [-3.0661,-2.7424,-0.8475],
-  [2.7424,0.8475,-3.0661],
-  [1.6949,3.5899,1.3712],
-  [0.8475,-4.1136,0.0],
-  [-1.3712,1.6949,3.5899],
-  [2.7424,-0.8475,3.0661],
-  [3.5899,1.3712,-1.6949],
-  [-1.6949,3.5899,-1.3712],
-  [-3.5899,-1.3712,-1.6949]
+const CAFFEINE_SYMBOLS = ['C','C','C','C','C','C','C','C','N','N','N','N','O','O','H','H','H','H','H','H','H','H','H','H']
+const CAFFEINE_POSITIONS = [
+  [1.2124,0.518,0.0],[-0.0492,1.1746,0.0],[1.2714,1.8282,0.0],[-1.2144,0.212,0.0],[0.0492,-0.5,0.0],
+  [-1.45,2.64,0.0],[2.56,2.48,0.0],[-0.1,-2.0,0.0],
+  [0.0,0.0,0.0],[1.2714,0.0,0.0],[-1.2144,1.62,0.0],[0.0492,2.24,0.0],
+  [-2.38,-0.4,0.0],[2.38,0.518,0.0],
+  [-1.45,3.54,0.0],[-2.42,2.28,0.0],[-1.22,2.64,0.9],
+  [2.56,3.38,0.0],[3.5,2.15,0.0],[2.42,2.5,0.9],
+  [-0.1,-2.9,0.0],[-1.06,-1.8,0.0],[0.78,-2.2,0.0],
+  [0.0492,-0.5,1.08]
 ]
 
 const STEP_NAMES = ['LLM Gateway','Geodesic TS','Solvation','MACE + DFT','Surface Hop','Kinetic Summary']
@@ -275,11 +223,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
   },[])
 
   useImperativeHandle(ref,()=>({
-    showDemo:()=>{
-      threeClear(t.current)
-      const g=threeBuild(C60_SYMBOLS, C60_POSITIONS)
-      t.current.scene.add(g); t.current.molecules.push(g)
-    },
+    showDemo:()=>{ threeClear(t.current) },
     setIRC:(frames,symbols)=>{
       threeClear(t.current)
       t.current.ircFrames=frames; t.current.ircPlayback=frames?.length>0
@@ -458,7 +402,7 @@ function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
         ...(window.innerWidth<=768?{position:'fixed',top:0,left:0,bottom:0,transform:open?'translateX(0)':'translateX(-100%)',transition:'transform 0.3s cubic-bezier(0.4,0,0.2,1)'}:{})
       }}>
         <div style={{padding:'20px 20px 16px',borderBottom:'1px solid var(--border)'}}>
-          <div style={{...serif,fontSize:15,fontStyle:'italic',letterSpacing:'0.02em'}}>MolSim</div>
+          <div style={{...serif,fontSize:15,fontWeight:500,letterSpacing:'0.02em'}}>MolSim</div>
           <div style={{...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.12em',textTransform:'uppercase',marginTop:2}}>Molecular Dynamics Engine</div>
         </div>
         <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border2)',display:'flex',alignItems:'center',gap:8}}>
@@ -513,7 +457,7 @@ function Header({ sessionId, page, setPage, setSidebarOpen }) {
       </button>
       <div style={{display:'flex',flexDirection:'column',gap:2,flex:1,minWidth:0}}>
         <div style={{...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.1em',textTransform:'uppercase'}}>SESSION ID: {sessionId}</div>
-        <div style={{...serif,fontSize:20,fontStyle:'italic',color:'var(--text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{titles[page]||''}</div>
+        <div style={{...serif,fontSize:20,fontWeight:500,color:'var(--text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{titles[page]||''}</div>
       </div>
       <div style={{display:'flex',alignItems:'center',gap:12,marginLeft:'auto'}}>
         {['⌕','⚙','?'].map((icon,i)=>(
@@ -578,7 +522,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         ? {borderTop:'1px solid var(--border)',overflowY:'auto',maxHeight:'50vh'}
         : {width:220,borderLeft:'1px solid var(--border)',overflowY:'auto',flexShrink:0})
     }}>
-      <div style={{padding:'16px 16px 12px',borderBottom:'1px solid var(--border2)',...serif,fontSize:14,fontStyle:'italic',color:'var(--text)'}}>Simulation Metrics</div>
+      <div style={{padding:'16px 16px 12px',borderBottom:'1px solid var(--border2)',...serif,fontSize:14,fontWeight:500,color:'var(--text)'}}>Simulation Metrics</div>
       <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border2)'}}>
         {[
           {key:'ΔG‡',val:barrier!=null?`${barrier} kcal/mol`:null},
@@ -606,7 +550,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         </div>
         {pipeStatus==='running'&&<div style={{...mono,fontSize:8,color:'var(--text-dim)',marginTop:8,letterSpacing:'0.06em'}}>Polling every 3s…</div>}
         {s4?.is_bimolecular&&s4?.t_ds_correction_kcal&&(
-          <div style={{...mono,fontSize:8,color:'var(--accent2)',marginTop:6}}>−TΔS‡ +{s4.t_ds_correction_kcal} kcal/mol applied</div>
+          <div style={{...mono,fontSize:8,color:'var(--accent2)',marginTop:6}}>-TΔS‡ +{s4.t_ds_correction_kcal} kcal/mol applied</div>
         )}
         {pipeResult&&!saddleFound&&(
           <div style={{...mono,fontSize:8,color:'#c06060',marginTop:6,letterSpacing:'0.06em'}}>No saddle point found</div>
@@ -615,7 +559,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
       {pipeResult&&(s4?.extra?.narrative||pipeResult.summary)&&(
         <div style={{margin:'14px 16px',padding:12,background:'var(--surface2)',border:'1px solid var(--border2)',borderLeft:'2px solid var(--accent)'}}>
           <div style={{...mono,fontSize:8,color:'var(--text-dim)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:6}}>Archival Note</div>
-          <div style={{...serif,fontStyle:'italic',fontSize:11,color:'var(--text-mid)',lineHeight:1.6}}>{s4?.extra?.narrative||pipeResult.summary}</div>
+          <div style={{...serif,fontWeight:500,fontSize:11,color:'var(--text-mid)',lineHeight:1.6}}>{s4?.extra?.narrative||pipeResult.summary}</div>
         </div>
       )}
     </div>
@@ -689,19 +633,19 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         </div>
 
         {/* ── VIEWER ── */}
-        <div style={{position:'relative',background:'#ffffff',flex:1,minHeight:0,maxHeight:'calc(100dvh - 230px)'}}>
+        <div style={{position:'relative',background:'#ffffff',flex:1,minHeight:0,maxHeight:'calc(100dvh - 260px)'}}>
           <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,pointerEvents:'none'}}>
               <div style={{fontSize:32,opacity:0.08}}>⬡</div>
-              <div style={{...serif,fontStyle:'italic',fontSize:13,color:'var(--text-dim)',opacity:0.5}}>No simulation active</div>
+              <div style={{...serif,fontWeight:500,fontSize:13,color:'var(--text-dim)',opacity:0.5}}>No simulation active</div>
             </div>
           )}
           {pipeStatus==='idle'&&viewerRef.current?.hasMol?.()&&(
             <div style={{position:'absolute',bottom:46,left:0,right:0,display:'flex',justifyContent:'center',pointerEvents:'none'}}>
               <div style={{background:'rgba(255,255,255,0.92)',border:'1px solid var(--border)',padding:'4px 12px',display:'flex',flexDirection:'column',alignItems:'center',gap:1,backdropFilter:'blur(8px)'}}>
-                <div style={{...serif,fontStyle:'italic',fontSize:11,color:'var(--text)',letterSpacing:'0.02em'}}>Buckminsterfullerene</div>
-                <div style={{...mono,fontSize:7,color:'var(--text-dim)',letterSpacing:'0.12em'}}>C₆₀ · DEMO MOLECULE</div>
+                <div style={{...serif,fontWeight:500,fontSize:11,color:'var(--text)',letterSpacing:'0.02em'}}>Caffeine</div>
+                <div style={{...mono,fontSize:7,color:'var(--text-dim)',letterSpacing:'0.12em'}}>C₈H₁₀N₄O₂ · DEMO MOLECULE</div>
               </div>
             </div>
           )}
@@ -714,8 +658,8 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
           {pipeStatus==='idle'&&viewerRef.current?.hasMol?.()&&(
             <div style={{position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',pointerEvents:'none'}}>
               <div style={{background:'rgba(255,255,255,0.92)',border:'1px solid var(--border)',padding:'5px 16px',display:'flex',flexDirection:'column',alignItems:'center',gap:1,backdropFilter:'blur(8px)'}}>
-                <div style={{...serif,fontStyle:'italic',fontSize:13,color:'var(--text)',letterSpacing:'0.02em'}}>Buckminsterfullerene</div>
-                <div style={{...mono,fontSize:8,color:'var(--text-dim)',letterSpacing:'0.12em'}}>C₆₀ · DEMO MOLECULE</div>
+                <div style={{...serif,fontWeight:500,fontSize:13,color:'var(--text)',letterSpacing:'0.02em'}}>Caffeine</div>
+                <div style={{...mono,fontSize:8,color:'var(--text-dim)',letterSpacing:'0.12em'}}>C₈H₁₀N₄O₂ · DEMO MOLECULE</div>
               </div>
             </div>
           )}
@@ -872,7 +816,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,pointerEvents:'none'}}>
               <div style={{fontSize:40,opacity:0.08}}>⬡</div>
-              <div style={{...serif,fontStyle:'italic',fontSize:16,color:'var(--text-dim)',opacity:0.5}}>No simulation active</div>
+              <div style={{...serif,fontWeight:500,fontSize:16,color:'var(--text-dim)',opacity:0.5}}>No simulation active</div>
               <div style={{...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.1em',opacity:0.3}}>Enter a reaction prompt below to begin</div>
             </div>
           )}
@@ -981,14 +925,14 @@ function AnalyticsTab({ energyProfile, ircFrames, s4, pipeResult }) {
   const hasData = energyProfile?.length > 0
   if (!hasData) return (
     <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16}}>
-      <div style={{...serif,fontSize:28,fontStyle:'italic',color:'var(--text)',opacity:0.3}}>Analytics</div>
+      <div style={{...serif,fontSize:28,fontWeight:500,color:'var(--text)',opacity:0.3}}>Analytics</div>
       <div style={{...mono,fontSize:10,color:'var(--text-dim)',letterSpacing:'0.1em',opacity:0.4}}>RUN A SIMULATION FIRST TO SEE ENERGY PROFILES</div>
     </div>
   )
   return (
     <div style={{flex:1,overflowY:'auto',padding:'32px'}}>
       <div style={{...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:4}}>Reaction Energy Profile</div>
-      <div style={{...serif,fontStyle:'italic',fontSize:22,color:'var(--text)',marginBottom:24}}>{s4?.energy_method||'MACE-OMol-0'}</div>
+      <div style={{...serif,fontWeight:500,fontSize:22,color:'var(--text)',marginBottom:24}}>{s4?.energy_method||'MACE-OMol-0'}</div>
 
       <div style={{background:'var(--surface)',border:'1px solid var(--border)',padding:'24px',marginBottom:24}}>
         <EnergyProfileChart energyProfile={energyProfile}/>
@@ -1047,7 +991,7 @@ function LibraryPage({ simulations, onOpen }) {
     <div style={{flex:1,overflow:'hidden',display:'flex',flexDirection:'column'}}>
       <div style={{padding:'28px 32px 20px',borderBottom:'1px solid var(--border)',flexShrink:0,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
         <div>
-          <div style={{...serif,fontSize:32,fontStyle:'italic',color:'var(--text)',lineHeight:1}}>The Project Library</div>
+          <div style={{...serif,fontSize:32,fontWeight:500,color:'var(--text)',lineHeight:1}}>The Project Library</div>
           <div style={{fontSize:12,color:'var(--text-dim)',marginTop:6,maxWidth:420,lineHeight:1.6}}>A curated archival collection of molecular trajectories and structural computations.</div>
         </div>
       </div>
@@ -1055,7 +999,7 @@ function LibraryPage({ simulations, onOpen }) {
         {all.length===0&&(
           <div style={{gridColumn:'1/-1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'80px 0',gap:12,opacity:0.5}}>
             <div style={{fontSize:36}}>⬡</div>
-            <div style={{...serif,fontStyle:'italic',fontSize:18,color:'var(--text-dim)'}}>No simulations yet</div>
+            <div style={{...serif,fontWeight:500,fontSize:18,color:'var(--text-dim)'}}>No simulations yet</div>
             <div style={{fontSize:11,color:'var(--text-dim)',textAlign:'center',maxWidth:300,lineHeight:1.6}}>Run a reaction from the dashboard and your results will appear here.</div>
           </div>
         )}
@@ -1071,7 +1015,7 @@ function LibraryPage({ simulations, onOpen }) {
               <div style={{...mono,fontSize:8,color:'var(--text-dim)',display:'flex',justifyContent:'space-between',marginBottom:5}}>
                 <span>FOLDER ID: {item.id}</span><span>{item.status}</span>
               </div>
-              <div style={{...serif,fontStyle:'italic',fontSize:14,color:'var(--text)',marginBottom:5,lineHeight:1.3}}>{item.title}</div>
+              <div style={{...serif,fontWeight:500,fontSize:14,color:'var(--text)',marginBottom:5,lineHeight:1.3}}>{item.title}</div>
               <div style={{fontSize:10,color:'var(--text-dim)',lineHeight:1.5,marginBottom:10}}>{item.desc}</div>
               <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
                 {item.tags.map(t=><span key={t} style={{...mono,fontSize:8,padding:'2px 7px',border:'1px solid var(--border)',color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{t}</span>)}
@@ -1121,7 +1065,7 @@ function SettingsPage({ settings, setSettings, mode, setMode }) {
     <div style={{flex:1,overflowY:'auto',padding:32}}>
       <div style={{marginBottom:36}}>
         <div style={{...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.1em',marginBottom:6}}>SYSTEM CONFIG — v9.2.0</div>
-        <div style={{...serif,fontStyle:'italic',fontSize:32,color:'var(--text)',lineHeight:1,marginBottom:6}}>Preferences &<span style={{display:'block',fontSize:36}}>Control</span></div>
+        <div style={{...serif,fontWeight:500,fontSize:32,color:'var(--text)',lineHeight:1,marginBottom:6}}>Preferences &<span style={{display:'block',fontSize:36}}>Control</span></div>
         <div style={{fontSize:12,color:'var(--text-dim)',lineHeight:1.6,maxWidth:480,marginTop:10}}>Configure your Modal deployment endpoint and simulation defaults.</div>
       </div>
 
@@ -1163,7 +1107,7 @@ function SettingsPage({ settings, setSettings, mode, setMode }) {
         <div key={sec.num} style={{display:'flex',gap:32,marginBottom:32,paddingBottom:32,borderBottom:'1px solid var(--border2)'}}>
           <div style={{width:180,flexShrink:0}}>
             <div style={{...mono,fontSize:9,color:'var(--text-dim)',letterSpacing:'0.1em',marginBottom:6}}>{sec.num}</div>
-            <div style={{...serif,fontStyle:'italic',fontSize:18,color:'var(--text)',marginBottom:6}}>{sec.title}</div>
+            <div style={{...serif,fontWeight:500,fontSize:18,color:'var(--text)',marginBottom:6}}>{sec.title}</div>
             <div style={{fontSize:10,color:'var(--text-dim)',lineHeight:1.6}}>{sec.desc}</div>
           </div>
           <div style={{flex:1,display:'flex',flexDirection:'column',gap:14}}>{sec.fields}</div>
@@ -1239,6 +1183,12 @@ export default function App() {
   useEffect(()=>{
     if(logBodyRef.current) logBodyRef.current.scrollTop=logBodyRef.current.scrollHeight
   },[pipeLogs])
+
+  // Show C60 demo on initial mount
+  useEffect(()=>{
+    const t = setTimeout(()=>{ viewerRef.current?.showDemo() }, 100)
+    return ()=>clearTimeout(t)
+  },[])
 
   // Elapsed timer
   useEffect(()=>{
@@ -1398,7 +1348,7 @@ export default function App() {
   }
 
   const globalCss = `
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400;500&display=swap');
     :root{
       --bg:#f5f2ee;
       --surface:#faf8f5;
@@ -1416,7 +1366,7 @@ export default function App() {
     }
     *{margin:0;padding:0;box-sizing:border-box}
     html,body,#root{height:100%;overflow:hidden;background:var(--bg);color:var(--text)}
-    body{font-family:'DM Sans',sans-serif;font-size:13px}
+    body{font-family:'Geist',sans-serif;font-size:13px;letter-spacing:-0.01em}
     ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border)}
     input,select,textarea,button{font-family:inherit}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
@@ -1425,7 +1375,7 @@ export default function App() {
       50%{width:60%;margin-left:20%}
       100%{width:0%;margin-left:100%}
     }
-    select option{background:#f5f2ee;color:#1a1714}
+    select option{background:#f5f2ee;color:#1a1714;font-family:'Geist',sans-serif}
   `
 
   return (
