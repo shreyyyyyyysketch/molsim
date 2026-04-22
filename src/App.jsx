@@ -1247,6 +1247,8 @@ export default function App() {
   }
 
   function processResult(result) {
+    clearInterval(pollTimer.current)
+    setCallId(null)
     setPipeResult(result)
     setPipeStatus('complete')
     const steps = result.steps||[]
