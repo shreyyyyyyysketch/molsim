@@ -1765,7 +1765,7 @@ export default function App() {
 
     pollTimer.current = setInterval(async()=>{
       try {
-        const resp = await fetch(`https://besthashreyas--molsim-pipeline-api-pipeline-status.modal.run/?call_id=${callId}`)
+        const resp = await fetch(`https://shreyyasshreyyas--molsim-pipeline-api-pipeline-status.modal.run/?call_id=${callId}`)
         const data = await resp.json()
 
         if(data.status==='running') {
@@ -1849,7 +1849,7 @@ export default function App() {
     addLog(`Spawning pipeline — mode: ${mode} | solvent: ${solvent} | T: ${temp}K`,'info')
 
     // Fire instant 2D preview in parallel (Step 1 only, ~2s)
-    fetch('https://besthashreyas--molsim-pipeline-api-pipeline-preview.modal.run/',{
+    fetch('https://shreyyasshreyyas--molsim-pipeline-api-pipeline-preview.modal.run/',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt.trim()}),
     }).then(r=>r.json()).then(d=>{
@@ -1860,7 +1860,7 @@ export default function App() {
     }).catch(()=>{})  // preview failure is silent — 3D still runs
 
     try {
-      const resp=await fetch(`https://besthashreyas--molsim-pipeline-api-pipeline-start.modal.run/`,{
+      const resp=await fetch(`https://shreyyasshreyyas--molsim-pipeline-api-pipeline-start.modal.run/`,{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({prompt:prompt.trim(),temperature:temp,n_microstates:128,accuracy_mode:mode}),
       })
