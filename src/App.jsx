@@ -612,10 +612,8 @@ function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
       }}>
         <div style={{padding:'22px 20px 18px',borderBottom:'1px solid var(--border)'}}>
           <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:2}}>
-            <div style={{width:26,height:26,background:'linear-gradient(135deg,var(--accent-bright),var(--accent))',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 8px rgba(194,105,42,0.25)'}}>
-              <span style={{color:'#fff',fontSize:11}}>⬡</span>
-            </div>
-            <div style={{...serif,fontSize:20,fontWeight:400,letterSpacing:'0.01em',color:'var(--text)'}}>MolSim</div>
+
+            <div style={{...serif,fontSize:20,fontWeight:400,letterSpacing:'0.01em',color:'var(--text)'}}>Fervor</div>
           </div>
           <div style={{fontSize:10,color:'var(--text-dim)',marginTop:5,letterSpacing:'0.04em'}}>Molecular Dynamics Engine</div>
         </div>
@@ -1407,29 +1405,29 @@ function LandingPage({ onEnter }) {
     const W = el.clientWidth, H = el.clientHeight
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 200)
-    camera.position.set(0, 0, isMob ? 14 : 16)
+    camera.position.set(0, 0, isMob ? 13 : 15)
     const renderer = new THREE.WebGLRenderer({ canvas: el, antialias: true, alpha: true })
     renderer.setSize(W, H)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.setClearColor(0xf0ede8, 1)
+    renderer.setClearColor(0x000000, 0) // transparent — CSS handles bg
 
-    scene.add(new THREE.AmbientLight(0xffffff, 1.6))
-    const d1 = new THREE.DirectionalLight(0xffd4a0, 1.4); d1.position.set(8,12,10); scene.add(d1)
-    const d2 = new THREE.DirectionalLight(0xa0c4ff, 0.35); d2.position.set(-8,-4,-8); scene.add(d2)
+    scene.add(new THREE.AmbientLight(0xfff5e8, 1.4))
+    const d1 = new THREE.DirectionalLight(0xffd4a0, 1.6); d1.position.set(8,12,10); scene.add(d1)
+    const d2 = new THREE.DirectionalLight(0xa0c4ff, 0.3); d2.position.set(-8,-4,-8); scene.add(d2)
 
     const nucleus = new THREE.Mesh(
       new THREE.SphereGeometry(isMob ? 1.0 : 1.3, 64, 48),
-      new THREE.MeshStandardMaterial({ color:0xc2692a, roughness:0.12, metalness:0.65, emissive:0xc2692a, emissiveIntensity:0.18 })
+      new THREE.MeshStandardMaterial({ color:0xc2692a, roughness:0.10, metalness:0.70, emissive:0xc2692a, emissiveIntensity:0.25 })
     )
     scene.add(nucleus)
-    const glow = new THREE.PointLight(0xe07830, 4, 14); scene.add(glow)
+    const glow = new THREE.PointLight(0xe07830, 5, 16); scene.add(glow)
 
-    const sc = isMob ? 0.7 : 1
+    const sc = isMob ? 0.78 : 1
     const rings = []
     ;[[0,0,0],[Math.PI/3,0,0],[Math.PI/1.6,Math.PI/4,0]].forEach((rot,i) => {
       const r = new THREE.Mesh(
-        new THREE.TorusGeometry((4+i*1.8)*sc, 0.05, 12, 120),
-        new THREE.MeshStandardMaterial({ color:i===0?0xc2692a:0xb8b0a4, roughness:0.35, metalness:0.4, opacity:0.7, transparent:true })
+        new THREE.TorusGeometry((4+i*1.8)*sc, 0.055, 12, 120),
+        new THREE.MeshStandardMaterial({ color:i===0?0xc2692a:0xb8b0a4, roughness:0.3, metalness:0.45, opacity:0.75, transparent:true })
       )
       r.rotation.set(...rot); rings.push(r); scene.add(r)
     })
@@ -1442,7 +1440,7 @@ function LandingPage({ onEnter }) {
         const radius = (4+ri*1.8)*sc
         const s = new THREE.Mesh(
           new THREE.SphereGeometry((0.18+ri*0.05)*sc, 20, 16),
-          new THREE.MeshStandardMaterial({ color:COLORS[(ri*2+i)%COLORS.length], roughness:0.2, metalness:0.55 })
+          new THREE.MeshStandardMaterial({ color:COLORS[(ri*2+i)%COLORS.length], roughness:0.18, metalness:0.6 })
         )
         orbiters.push({ mesh:s, ri, angle, radius, speed:0.006+ri*0.002+i*0.001 })
         scene.add(s)
@@ -1468,9 +1466,9 @@ function LandingPage({ onEnter }) {
         const cv=Math.cos(e2.x),sv=Math.sin(e2.x),cz=Math.cos(e2.z),sz=Math.sin(e2.z)
         o.mesh.position.set(lx*cz-ly*sv*sz, lx*sz+ly*sv*cz, ly*cv)
       })
-      glow.intensity=3.2+Math.sin(t*1.8)*1.0
-      camera.position.x+=(mx*1.8-camera.position.x)*0.035
-      camera.position.y+=(-my*1.2-camera.position.y)*0.035
+      glow.intensity=3.8+Math.sin(t*1.8)*1.2
+      camera.position.x+=(mx*1.5-camera.position.x)*0.03
+      camera.position.y+=(-my*1.0-camera.position.y)*0.03
       camera.lookAt(0,0,0)
       renderer.render(scene,camera)
     }
@@ -1483,198 +1481,178 @@ function LandingPage({ onEnter }) {
   return (
     <div style={{
       position:'fixed', inset:0, overflow:'hidden',
-      background:'#f7f7f5',
       fontFamily:"'DM Sans',sans-serif",
       opacity:entered?0:1, transition:'opacity 0.52s ease',
-      display:'flex', flexDirection:'column',
+      // warm radial glow background
+      background:'radial-gradient(ellipse 80% 70% at 50% 50%, #f5e6cc 0%, #ede0cc 35%, #d4c4a8 70%, #bfad90 100%)',
     }}>
+
+      {/* ── GRAIN TEXTURE OVERLAY ── */}
+      <div style={{
+        position:'absolute', inset:0, zIndex:1, pointerEvents:'none',
+        opacity:0.038,
+        backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        backgroundSize:'180px 180px',
+      }}/>
+
+      {/* ── THREE.JS CANVAS — full bleed background ── */}
+      <canvas ref={canvasRef} style={{
+        position:'absolute', inset:0, width:'100%', height:'100%',
+        zIndex:2,
+      }}/>
+
+      {/* ── VIGNETTE — darkens edges so card text pops ── */}
+      <div style={{
+        position:'absolute', inset:0, zIndex:3, pointerEvents:'none',
+        background:'radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(60,40,20,0.28) 100%)',
+      }}/>
 
       {/* ── NAV ── */}
       <div style={{
-        flexShrink:0, padding:'16px 20px',
+        position:'absolute', top:0, left:0, right:0, zIndex:20,
+        padding:'16px 24px',
         display:'flex', alignItems:'center', justifyContent:'space-between',
-        background:'rgba(247,247,245,0.9)', backdropFilter:'blur(12px)',
-        borderBottom:'1px solid rgba(20,18,16,0.07)',
-        position:'relative', zIndex:20,
+        background:'rgba(245,235,210,0.55)', backdropFilter:'blur(16px)',
+        borderBottom:'1px solid rgba(194,105,42,0.12)',
         animation:'landingFadeUp 0.6s ease both',
       }}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
-          <div style={{
-            width:28,height:28,flexShrink:0,
-            background:'linear-gradient(135deg,#e07830,#b85e20)',
-            borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',
-            boxShadow:'0 2px 8px rgba(194,105,42,0.28)',
-          }}>
-            <span style={{color:'#fff',fontSize:12,lineHeight:1}}>⬡</span>
-          </div>
-          <span style={{fontFamily:"'DM Serif Display',serif",fontSize:18,color:'#141210',letterSpacing:'-0.01em'}}>MolSim</span>
+          <span style={{fontFamily:"'DM Serif Display',serif",fontSize:19,color:'#1a1208',letterSpacing:'-0.01em'}}>Fervor</span>
         </div>
         <button onClick={handleEnter} style={{
           padding:'8px 18px', fontSize:12, fontWeight:600,
-          background:'#141210', color:'#fff', border:'none',
+          background:'rgba(20,12,0,0.82)', color:'#fff', border:'none',
           borderRadius:8, cursor:'pointer', letterSpacing:'-0.01em',
-        }}>Open App →</button>
+          backdropFilter:'blur(8px)',
+          transition:'background 0.15s',
+        }}
+        onMouseEnter={e=>e.currentTarget.style.background='rgba(20,12,0,1)'}
+        onMouseLeave={e=>e.currentTarget.style.background='rgba(20,12,0,0.82)'}
+        >Open App →</button>
       </div>
 
-      {/* ── BODY: side-by-side on desktop, stacked on mobile ── */}
+      {/* ── FROSTED GLASS CARD — centred over the molecule ── */}
       <div style={{
-        flex:1, display:'flex',
-        flexDirection: isMob ? 'column' : 'row',
-        overflow:'hidden',
-        minHeight:0,
+        position:'absolute', zIndex:10,
+        ...(isMob
+          ? { bottom:'72px', left:'20px', right:'20px' }
+          : { top:'50%', left:'50%', transform:'translate(-50%, -50%)', width:'min(520px, 55vw)' }
+        ),
+        background:'rgba(250,243,230,0.55)',
+        backdropFilter:'blur(22px) saturate(1.4)',
+        WebkitBackdropFilter:'blur(22px) saturate(1.4)',
+        border:'1px solid rgba(255,240,210,0.7)',
+        borderRadius: isMob ? 20 : 24,
+        boxShadow:'0 8px 48px rgba(60,30,0,0.18), 0 1px 0 rgba(255,255,255,0.6) inset',
+        padding: isMob ? '28px 20px 24px' : '44px 48px 40px',
+        animation:'landingFadeUp 0.8s 0.1s ease both', opacity:0,
       }}>
 
-        {/* LEFT / TOP — pure text, clean white */}
+        {/* Eyebrow */}
         <div style={{
-          flex: isMob ? 'none' : '0 0 52%',
-          display:'flex', flexDirection:'column',
-          justifyContent:'center',
-          padding: isMob ? '32px 24px 20px' : '0 56px 0 52px',
-          background:'#f7f7f5',
-          position:'relative', zIndex:10,
+          display:'inline-flex', alignItems:'center', gap:7,
+          padding:'4px 12px', marginBottom:22,
+          background:'rgba(194,105,42,0.12)',
+          border:'1px solid rgba(194,105,42,0.25)',
+          borderRadius:20, alignSelf:'flex-start',
+          fontSize:10, fontWeight:700, color:'#c2692a',
+          letterSpacing:'0.07em', textTransform:'uppercase',
         }}>
-
-          {/* Eyebrow */}
-          <div style={{
-            display:'inline-flex', alignItems:'center', gap:7,
-            padding:'4px 12px', marginBottom:20,
-            background:'rgba(194,105,42,0.09)',
-            border:'1px solid rgba(194,105,42,0.2)',
-            borderRadius:20, alignSelf:'flex-start',
-            fontSize:10, fontWeight:700, color:'#c2692a',
-            letterSpacing:'0.07em', textTransform:'uppercase',
-            animation:'landingFadeUp 0.7s 0.1s ease both', opacity:0,
-          }}>
-            <span style={{width:5,height:5,borderRadius:'50%',background:'#c2692a',display:'inline-block',flexShrink:0}}/>
-            Molecular Dynamics · v9.0
-          </div>
-
-          {/* Headline */}
-          <h1 style={{
-            fontFamily:"'DM Serif Display',serif",
-            fontSize: isMob ? 48 : 'clamp(48px,5.5vw,80px)',
-            fontWeight:400, lineHeight:1.0,
-            color:'#141210', letterSpacing:'-0.03em',
-            margin:'0 0 16px',
-            animation:'landingFadeUp 0.7s 0.18s ease both', opacity:0,
-          }}>
-            Chemistry,<br/>
-            <span style={{
-              background:'linear-gradient(135deg,#e07830,#b85e20)',
-              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-            }}>Computed.</span>
-          </h1>
-
-          {/* Subhead */}
-          <p style={{
-            fontSize: isMob ? 14 : 16,
-            color:'#7a736c', lineHeight:1.65,
-            margin:'0 0 32px', maxWidth:400,
-            animation:'landingFadeUp 0.7s 0.28s ease both', opacity:0,
-          }}>
-            From reaction prompt to barrier heights, IRC paths and rate constants — via MACE&nbsp;+&nbsp;DFT, in minutes.
-          </p>
-
-          {/* CTA */}
-          <div style={{
-            display:'flex', gap:10,
-            flexDirection: isMob?'column':'row',
-            animation:'landingFadeUp 0.7s 0.38s ease both', opacity:0,
-          }}>
-            <button onClick={handleEnter} style={{
-              padding:'13px 28px', fontSize:14, fontWeight:600,
-              background:'linear-gradient(135deg,#e07830,#b85e20)',
-              color:'#fff', border:'none', borderRadius:10, cursor:'pointer',
-              boxShadow:'0 4px 18px rgba(194,105,42,0.32)',
-              transition:'transform 0.15s,box-shadow 0.15s',
-              letterSpacing:'-0.01em',
-            }}
-            onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 28px rgba(194,105,42,0.42)'}}
-            onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 4px 18px rgba(194,105,42,0.32)'}}
-            >Launch Simulation →</button>
-            <button style={{
-              padding:'13px 22px', fontSize:14, fontWeight:500,
-              background:'rgba(255,255,255,0.9)', color:'#141210',
-              border:'1px solid rgba(20,18,16,0.1)', borderRadius:10, cursor:'pointer',
-              backdropFilter:'blur(8px)', transition:'background 0.15s',
-              letterSpacing:'-0.01em',
-            }}
-            onMouseEnter={e=>e.currentTarget.style.background='#fff'}
-            onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.9)'}
-            >View Demo</button>
-          </div>
-
-          {/* Stats */}
-          <div style={{
-            display:'flex', gap:0,
-            marginTop:36,
-            border:'1px solid rgba(20,18,16,0.08)',
-            borderRadius:10, overflow:'hidden',
-            background:'rgba(255,255,255,0.7)',
-            backdropFilter:'blur(10px)',
-            alignSelf: isMob?'stretch':'flex-start',
-            animation:'landingFadeUp 0.7s 0.48s ease both', opacity:0,
-          }}>
-            {[
-              {val:'< 3 min',label:'Fast mode'},
-              {val:'MACE',label:'+ DFT'},
-              {val:'12',label:'Solvents'},
-              {val:'ΔG‡',label:'+ IRC'},
-            ].map((s,i)=>(
-              <div key={i} style={{
-                padding:'11px 18px', textAlign:'center',
-                borderRight:i<3?'1px solid rgba(20,18,16,0.07)':'none',
-                minWidth:0,
-              }}>
-                <div style={{fontFamily:"'DM Serif Display',serif",fontSize:16,color:'#141210',letterSpacing:'-0.02em',whiteSpace:'nowrap'}}>{s.val}</div>
-                <div style={{fontSize:9,fontWeight:700,color:'#a09b94',letterSpacing:'0.06em',textTransform:'uppercase',marginTop:1,whiteSpace:'nowrap'}}>{s.label}</div>
-              </div>
-            ))}
-          </div>
+          <span style={{width:5,height:5,borderRadius:'50%',background:'#c2692a',display:'inline-block',flexShrink:0,animation:'pulse 2s ease-in-out infinite'}}/>
+          Molecular Dynamics · v9.0
         </div>
 
-        {/* RIGHT / BOTTOM — Three.js molecule, isolated */}
-        <div style={{
-          flex:1, position:'relative',
-          background:'#f0ede8',
-          minHeight: isMob ? 280 : 0,
-          maxHeight: isMob ? 280 : 'none',
+        {/* Headline */}
+        <h1 style={{
+          fontFamily:"'DM Serif Display',serif",
+          fontSize: isMob ? 36 : 'clamp(44px,4.8vw,68px)',
+          fontWeight:400, lineHeight:1.02,
+          color:'#1a1208', letterSpacing:'-0.03em',
+          margin:'0 0 14px',
         }}>
-          <canvas ref={canvasRef} style={{width:'100%',height:'100%',display:'block'}}/>
-          {/* subtle inner shadow to blend with left panel */}
-          {!isMob && <div style={{
-            position:'absolute',inset:0,pointerEvents:'none',
-            background:'linear-gradient(to right, rgba(247,247,245,0.35) 0%, transparent 18%)',
-          }}/>}
-          {/* label */}
-          <div style={{
-            position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',
-            display:'flex',alignItems:'center',gap:8,
-            background:'rgba(255,255,255,0.88)',backdropFilter:'blur(10px)',
-            border:'1px solid rgba(20,18,16,0.08)',
-            padding:'6px 14px', borderRadius:20, whiteSpace:'nowrap',
-          }}>
-            <div style={{width:6,height:6,borderRadius:'50%',background:'#c2692a',animation:'pulse 1.8s ease-in-out infinite',flexShrink:0}}/>
-            <span style={{fontSize:11,fontWeight:500,color:'#141210'}}>Live 3D Model</span>
-            <span style={{fontSize:10,color:'#a09b94'}}>· Drag to explore</span>
-          </div>
+          Chemistry,<br/>
+          <span style={{
+            background:'linear-gradient(135deg,#e07830 10%,#b85e20 90%)',
+            WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+          }}>Computed.</span>
+        </h1>
+
+        {/* Subhead */}
+        <p style={{
+          fontSize: isMob ? 13 : 15,
+          color:'#6b5c48', lineHeight:1.7,
+          margin:'0 0 28px', maxWidth:380,
+        }}>
+          From reaction prompt to barrier heights, IRC paths and rate constants — via MACE&nbsp;+&nbsp;DFT, in minutes.
+        </p>
+
+        {/* CTA buttons */}
+        <div style={{
+          display:'flex', gap:10,
+          flexDirection: isMob?'column':'row',
+          marginBottom:28,
+        }}>
+          <button onClick={handleEnter} style={{
+            padding:'13px 28px', fontSize:14, fontWeight:600,
+            background:'linear-gradient(135deg,#e07830,#b85e20)',
+            color:'#fff', border:'none', borderRadius:10, cursor:'pointer',
+            boxShadow:'0 4px 20px rgba(194,105,42,0.38)',
+            transition:'transform 0.15s,box-shadow 0.15s',
+            letterSpacing:'-0.01em', flex: isMob?1:'none',
+          }}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 30px rgba(194,105,42,0.48)'}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 4px 20px rgba(194,105,42,0.38)'}}
+          >Launch Simulation →</button>
+          <button style={{
+            padding:'13px 22px', fontSize:14, fontWeight:500,
+            background:'rgba(255,255,255,0.5)', color:'#1a1208',
+            border:'1px solid rgba(194,105,42,0.2)', borderRadius:10, cursor:'pointer',
+            backdropFilter:'blur(8px)', transition:'background 0.15s',
+            letterSpacing:'-0.01em', flex: isMob?1:'none',
+          }}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.75)'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.5)'}
+          >View Demo</button>
         </div>
 
+        {/* Stats bar */}
+        <div style={{
+          display:'flex', gap:0,
+          border:'1px solid rgba(194,105,42,0.15)',
+          borderRadius:10, overflow:'hidden',
+          background:'rgba(255,255,255,0.35)',
+          backdropFilter:'blur(8px)',
+        }}>
+          {[
+            {val:'< 3 min',label:'Fast mode'},
+            {val:'MACE',label:'+ DFT'},
+            {val:'12',label:'Solvents'},
+            {val:'ΔG‡',label:'+ IRC'},
+          ].map((s,i)=>(
+            <div key={i} style={{
+              flex:1, padding:'10px 0', textAlign:'center',
+              borderRight:i<3?'1px solid rgba(194,105,42,0.1)':'none',
+            }}>
+              <div style={{fontFamily:"'DM Serif Display',serif",fontSize:15,color:'#1a1208',letterSpacing:'-0.02em',whiteSpace:'nowrap'}}>{s.val}</div>
+              <div style={{fontSize:9,fontWeight:700,color:'#9a8060',letterSpacing:'0.06em',textTransform:'uppercase',marginTop:1,whiteSpace:'nowrap'}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── FOOTER ── */}
       <div style={{
-        flexShrink:0,
-        padding:'10px 20px',
+        position:'absolute', bottom:0, left:0, right:0, zIndex:20,
+        padding:'10px 24px',
         display:'flex', alignItems:'center', justifyContent:'space-between',
-        borderTop:'1px solid rgba(20,18,16,0.06)',
-        background:'rgba(247,247,245,0.9)',
+        background:'rgba(245,235,210,0.45)', backdropFilter:'blur(12px)',
+        borderTop:'1px solid rgba(194,105,42,0.1)',
         animation:'landingFadeUp 0.7s 0.55s ease both', opacity:0,
       }}>
-        <div style={{fontSize:10,color:'#b5b0aa'}}>© 2026 MolSim</div>
+        <div style={{fontSize:10,color:'#a08060'}}>© 2026 Fervor</div>
         <div style={{display:'flex',gap:16}}>
           {['Privacy','Terms','Status'].map(l=>(
-            <span key={l} style={{fontSize:10,color:'#b5b0aa',cursor:'pointer'}}>{l}</span>
+            <span key={l} style={{fontSize:10,color:'#a08060',cursor:'pointer'}}>{l}</span>
           ))}
         </div>
       </div>
@@ -1697,7 +1675,7 @@ export default function App() {
   // Pipeline
   const [pipeStatus, setPipeStatus] = useState('idle')
   const [pipeSteps, setPipeSteps]   = useState([])
-  const [pipeLogs, setPipeLogs]     = useState([{text:'MolSim v9.0 engine ready. Awaiting reaction prompt.',type:'info',time:'00:00'}])
+  const [pipeLogs, setPipeLogs]     = useState([{text:'Fervor v9.0 engine ready. Awaiting reaction prompt.',type:'info',time:'00:00'}])
   const [pipeResult, setPipeResult] = useState(null)
   const [callId, setCallId]         = useState(null)
   const [elapsedSec, setElapsedSec] = useState(0)
@@ -1709,6 +1687,7 @@ export default function App() {
   const logBodyRef = useRef(null)
   const viewerRef  = useRef(null)
   const pollErrCount = useRef(0)
+  const modalUrls    = useRef(null)   // set in runSimulation, read by polling effect
 
   // Config
   const [solvent, setSolvent] = useState('water')
@@ -1765,7 +1744,9 @@ export default function App() {
 
     pollTimer.current = setInterval(async()=>{
       try {
-        const resp = await fetch(`https://shreyyasshreyyas--molsim-pipeline-api-pipeline-status.modal.run/?call_id=${callId}`)
+        const statusUrl = modalUrls.current?.status
+          || 'https://shreyyasshreyyas--molsim-pipeline-api-pipeline-status.modal.run/'
+        const resp = await fetch(`${statusUrl}?call_id=${callId}`)
         const data = await resp.json()
 
         if(data.status==='running') {
@@ -1848,8 +1829,23 @@ export default function App() {
     viewerRef.current?.showDemo()
     addLog(`Spawning pipeline — mode: ${mode} | solvent: ${solvent} | T: ${temp}K`,'info')
 
+    // Resolve Modal base URL: use custom apiUrl from settings if set, else default deployment
+    const DEFAULT_BASE = 'https://shreyyasshreyyas--molsim-pipeline'
+    const rawBase = (settings.apiUrl||'').trim().replace(/\/+$/,'')
+    // If user pasted a full endpoint URL, strip down to base; otherwise use as-is or fall back
+    const modalBase = rawBase
+      ? rawBase.replace(/\/(api_pipeline.*)?$/, '')
+      : DEFAULT_BASE
+
+    const URLS = {
+      preview: `${modalBase}-api-pipeline-preview.modal.run/`,
+      start:   `${modalBase}-api-pipeline-start.modal.run/`,
+      status:  `${modalBase}-api-pipeline-status.modal.run/`,
+    }
+    modalUrls.current = URLS
+
     // Fire instant 2D preview in parallel (Step 1 only, ~2s)
-    fetch('https://shreyyasshreyyas--molsim-pipeline-api-pipeline-preview.modal.run/',{
+    fetch(URLS.preview,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt.trim()}),
     }).then(r=>r.json()).then(d=>{
@@ -1860,9 +1856,9 @@ export default function App() {
     }).catch(()=>{})  // preview failure is silent — 3D still runs
 
     try {
-      const resp=await fetch(`https://shreyyasshreyyas--molsim-pipeline-api-pipeline-start.modal.run/`,{
+      const resp=await fetch(URLS.start,{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt:prompt.trim(),temperature:temp,n_microstates:128,accuracy_mode:mode}),
+        body:JSON.stringify({prompt:prompt.trim(),temperature:temp,n_microstates:128,accuracy_mode:mode,solvent}),
       })
       if(!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const data=await resp.json()
