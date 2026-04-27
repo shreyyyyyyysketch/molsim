@@ -145,8 +145,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
   useEffect(()=>{
     const canvas=canvasRef.current, area=areaRef.current
     if(!canvas||!area) return
-    const W=area.clientWidth||300, H=area.clientHeight||300
-    if(W===0||H===0) return  // guard: don't init if hidden/zero-size
+    const W=area.clientWidth,H=area.clientHeight
 
     t.current.scene=new THREE.Scene()
     t.current.camera=new THREE.PerspectiveCamera(60,W/H,0.1,1000)
@@ -219,7 +218,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
       window.removeEventListener('mouseup',up)
       window.removeEventListener('mousemove',move)
       window.removeEventListener('resize',onResize)
-      if(t.current.renderer){ t.current.renderer.dispose(); t.current.renderer=null }
+      t.current.renderer.dispose()
     }
   },[])
 
@@ -891,7 +890,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
 
         {/* ── VIEWER ── */}
         <div style={{position:'relative',background:'#f0ede8',flex:1,minHeight:0,maxHeight:'calc(100dvh - 260px)'}}>
-          {isMobile ? <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/> : null}
+          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,pointerEvents:'none'}}>
               <div style={{fontSize:32,opacity:0.06}}>⬡</div>
@@ -970,9 +969,8 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         <div style={{borderTop:'2px solid var(--accent)',padding:'10px 12px',display:'flex',gap:8,alignItems:'flex-end',background:'var(--surface)',flexShrink:0,minHeight:56}}>
           <div style={{flex:1,border:'1px solid var(--border)',background:'var(--surface2)',display:'flex',alignItems:'center',gap:6,padding:'0 12px',borderRadius:10}}>
             <span style={{color:'var(--text-dim)',fontSize:13,flexShrink:0}}>⬡</span>
-            <textarea value={prompt} onChange={e=>setPrompt(e.target.value)}
+            <textarea value={prompt} onChange={e=>{setPrompt(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,72)+'px'}}
               onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();onRun()}}}
-              onChange={e=>{setPrompt(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,72)+'px'}}
               placeholder="Describe a reaction…"
               rows={1} style={{
                 flex:1,background:'transparent',border:'none',padding:'8px 0',
@@ -1076,7 +1074,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
       {/* CENTER */}
       <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
         <div style={{flex:1,position:'relative',background:'#ede9e2',minHeight:0}}>
-          {isMobile ? null : <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>}
+          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,pointerEvents:'none'}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'rgba(194,105,42,0.06)',border:'1px solid rgba(194,105,42,0.12)',display:'flex',alignItems:'center',justifyContent:'center'}}>
