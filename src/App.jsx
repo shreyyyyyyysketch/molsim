@@ -145,7 +145,8 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
   useEffect(()=>{
     const canvas=canvasRef.current, area=areaRef.current
     if(!canvas||!area) return
-    const W=area.clientWidth,H=area.clientHeight
+    const W=area.clientWidth||300, H=area.clientHeight||300
+    if(W===0||H===0) return  // guard: don't init if hidden/zero-size
 
     t.current.scene=new THREE.Scene()
     t.current.camera=new THREE.PerspectiveCamera(60,W/H,0.1,1000)
@@ -218,7 +219,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
       window.removeEventListener('mouseup',up)
       window.removeEventListener('mousemove',move)
       window.removeEventListener('resize',onResize)
-      t.current.renderer.dispose()
+      if(t.current.renderer){ t.current.renderer.dispose(); t.current.renderer=null }
     }
   },[])
 
@@ -890,7 +891,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
 
         {/* ── VIEWER ── */}
         <div style={{position:'relative',background:'#f0ede8',flex:1,minHeight:0,maxHeight:'calc(100dvh - 260px)'}}>
-          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
+          {isMobile ? <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/> : null}
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,pointerEvents:'none'}}>
               <div style={{fontSize:32,opacity:0.06}}>⬡</div>
@@ -1075,7 +1076,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
       {/* CENTER */}
       <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
         <div style={{flex:1,position:'relative',background:'#ede9e2',minHeight:0}}>
-          <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
+          {isMobile ? null : <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>}
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,pointerEvents:'none'}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'rgba(194,105,42,0.06)',border:'1px solid rgba(194,105,42,0.12)',display:'flex',alignItems:'center',justifyContent:'center'}}>
