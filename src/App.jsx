@@ -1856,7 +1856,7 @@ export default function App() {
     addLog(`Spawning pipeline — mode: ${mode} | solvent: ${solvent} | T: ${temp}K`,'info')
 
     // Resolve Modal base URL: use custom apiUrl from settings if set, else default deployment
-    const DEFAULT_BASE = 'https://shreyyasshreyyas--stygian-pipeline'
+    const DEFAULT_BASE = 'https://shreyyasshreyyas--molsim-pipeline'
     const rawBase = (settings.apiUrl||'').trim().replace(/\/+$/,'')
     // If user pasted a full endpoint URL, strip down to base; otherwise use as-is or fall back
     const modalBase = rawBase
