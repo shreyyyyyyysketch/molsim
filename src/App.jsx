@@ -613,9 +613,9 @@ function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
         <div style={{padding:'22px 20px 18px',borderBottom:'1px solid var(--border)'}}>
           <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:2}}>
 
-            <div style={{...serif,fontSize:20,fontWeight:400,letterSpacing:'0.01em',color:'var(--text)'}}>Fervor</div>
+            <div style={{...serif,fontSize:20,fontWeight:400,letterSpacing:'0.01em',color:'var(--text)'}}>Stygian</div>
           </div>
-          <div style={{fontSize:10,color:'var(--text-dim)',marginTop:5,letterSpacing:'0.04em'}}>Molecular Dynamics Engine</div>
+          <div style={{fontSize:10,color:'var(--text-dim)',marginTop:5,letterSpacing:'0.04em'}}>Molecular Simulation Engine</div>
         </div>
         <div style={{padding:'12px 14px',borderBottom:'1px solid var(--border2)',display:'flex',alignItems:'center',gap:10}}>
           <div style={{width:28,height:28,background:'var(--accent-dim)',border:'1px solid rgba(194,105,42,0.18)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'var(--accent)',fontWeight:600,flexShrink:0,letterSpacing:'-0.02em'}}>A</div>
@@ -742,6 +742,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
   const running = pipeStatus === 'running'
   const isMobile = window.innerWidth <= 768
 
+  const s6 = pipeResult?.steps?.[5] || {}
   const MetricsPanel = () => (
     <div style={{background:'var(--surface)',display:'flex',flexDirection:'column',
       ...(isMobile
@@ -754,10 +755,14 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
       </div>
       <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border2)'}}>
         {[
-          {key:'ΔG‡',val:barrier!=null?`${barrier} kcal/mol`:null},
-          {key:'ΔG rxn',val:rxnVal!=null?`${rxnVal} kcal/mol`:null},
-          {key:'Rate k',val:rateStr?`${rateStr} ${rateUnits}`:null},
-          {key:'Solvent',val:solvent||null},
+          {key:'ΔG‡',       val:barrier!=null?`${barrier} kcal/mol`:null},
+          {key:'ΔG rxn',    val:rxnVal!=null?`${rxnVal} kcal/mol`:null},
+          {key:'Rate k',    val:rateStr?`${rateStr} ${rateUnits}`:null},
+          {key:'Rate Method',val:s4?.rrkm_available?`RRKM κ=${s4?.wigner_kappa?.toFixed(2)||'?'}`:pipeStatus==='complete'?'Eyring TST':null},
+          {key:'Half-life',  val:s6?.half_life_str||null},
+          {key:'Yield est.', val:s6?.thermodynamic_yield_pct!=null?`${s6.thermodynamic_yield_pct.toFixed(1)}%`:null},
+          {key:'Branching',  val:s6?.branching_ratio||null},
+          {key:'Solvent',   val:solvent||null},
           {key:'IRC Frames',val:ircFrames?.length?`${ircFrames.length} frames`:null},
         ].map(({key,val})=>(
           <div key={key} style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',padding:'7px 0',borderBottom:'1px solid var(--border2)'}}>
@@ -777,18 +782,33 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         }}>
           {pipeStatus==='idle'?'Awaiting run':pipeStatus==='running'?'Computing…':energyMethod}
         </div>
+        {s4?.solvation_method&&pipeStatus==='complete'&&(
+          <div style={{...mono,fontSize:9,color:'var(--text-dim)',marginTop:6,lineHeight:1.4}}>{s4.solvation_method}</div>
+        )}
         {pipeStatus==='running'&&<div style={{fontSize:10,color:'var(--text-dim)',marginTop:8}}>Polling every 3s…</div>}
         {s4?.is_bimolecular&&s4?.t_ds_correction_kcal&&(
           <div style={{...mono,fontSize:9,color:'var(--accent2)',marginTop:6}}>-TΔS‡ +{s4.t_ds_correction_kcal} kcal/mol applied</div>
+        )}
+        {s4?.is_true_ts===true&&(
+          <div style={{fontSize:10,color:'var(--green)',marginTop:6}}>✓ True TS confirmed ({s4.ts_imaginary_cm1?.toFixed(0)} cm⁻¹)</div>
+        )}
+        {s4?.is_true_ts===false&&(
+          <div style={{fontSize:10,color:'#c8a055',marginTop:6}}>⚠ TS not confirmed by Hessian</div>
         )}
         {pipeResult&&!saddleFound&&(
           <div style={{fontSize:10,color:'var(--red)',marginTop:6}}>No saddle point found</div>
         )}
       </div>
-      {pipeResult&&(s4?.extra?.narrative||pipeResult.summary)&&(
+      {pipeResult&&(s6?.summary||s4?.extra?.narrative)&&(
         <div style={{margin:'14px 16px',padding:12,background:'var(--surface2)',border:'1px solid var(--border2)',borderLeft:'2px solid var(--accent)',borderRadius:'0 6px 6px 0'}}>
-          <div style={{fontSize:9,fontWeight:600,color:'var(--text-dim)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Archival Note</div>
-          <div style={{fontSize:11,color:'var(--text-mid)',lineHeight:1.6}}>{s4?.extra?.narrative||pipeResult.summary}</div>
+          <div style={{fontSize:9,fontWeight:600,color:'var(--text-dim)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Summary</div>
+          <div style={{fontSize:11,color:'var(--text-mid)',lineHeight:1.6}}>{s6?.summary||s4?.extra?.narrative}</div>
+        </div>
+      )}
+      {s6?.competing_pathway&&(
+        <div style={{margin:'0 16px 14px',padding:10,background:'var(--accent-dim)',border:'1px solid rgba(194,105,42,0.18)',borderRadius:6}}>
+          <div style={{fontSize:9,fontWeight:600,color:'var(--accent)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:4}}>Competing Pathway</div>
+          <div style={{fontSize:11,color:'var(--text-mid)',lineHeight:1.5}}>{s6.competing_pathway} ({s6.branching_ratio})</div>
         </div>
       )}
     </div>
@@ -995,7 +1015,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
             ))}
           </div>
           <div style={{fontSize:10,color:'var(--text-dim)',marginTop:7}}>
-            {mode==='fast'?'~2–3 min · MACE energies':'~6–9 min · DFT + Hessian'}
+            {mode==='fast'?'~2–4 min · MACE energies':'~8–12 min · DFT + Hessian + RRKM'}
           </div>
         </ConfigSection>
 
@@ -1226,16 +1246,22 @@ function AnalyticsTab({ energyProfile, ircFrames, s4, pipeResult, previewData })
           <div style={{fontSize:10,fontWeight:600,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:16}}>Kinetic Summary</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:16}}>
             {[
-              {k:'Rate Constant',v:s4.rate_constant_s1?`${s4.rate_constant_s1} ${s4.rate_constant_units||'s⁻¹'}`:  '—'},
-              {k:'Reaction Order',v:s4.is_bimolecular?'Bimolecular (k₂)':'Unimolecular (k₁)'},
+              {k:'Rate Constant',   v:s4.rate_constant_s1?`${s4.rate_constant_s1} ${s4.rate_constant_units||'s⁻¹'}`:'—'},
+              {k:'Rate Method',     v:s4.rrkm_available?`RRKM (κ=${s4.wigner_kappa?.toFixed(3)||'—'})`:'Eyring TST'},
+              {k:'Reaction Order',  v:s4.is_bimolecular?'Bimolecular (k₂)':'Unimolecular (k₁)'},
               {k:'Entropic Penalty',v:s4.t_ds_correction_kcal?`+${s4.t_ds_correction_kcal} kcal/mol`:'n/a'},
-              {k:'DFT Method',v:s4.energy_method||'—'},
-              {k:'Saddle Point',v:s4.saddle_point_found!==false?'✓ Found':'✗ Not found'},
-              {k:'IRC Frames',v:s4.irc_frame_count?`${s4.irc_frame_count} frames`:'—'},
+              {k:'Energy Method',   v:s4.energy_method||'—'},
+              {k:'Solvation',       v:s4.solvation_method||'TPSA-Born'},
+              {k:'Saddle Point',    v:s4.saddle_point_found!==false?'✓ Found':'✗ Not found'},
+              {k:'TS Validation',   v:s4.is_true_ts===true?`✓ True TS (${s4.ts_imaginary_cm1?.toFixed(0)||'?'} cm⁻¹)`:s4.is_true_ts===false?'⚠ Not confirmed':'—'},
+              {k:'ZPE at TS',       v:s4.zpe_ts_kcal!=null?`${s4.zpe_ts_kcal.toFixed(2)} kcal/mol`:'—'},
+              {k:'IRC Method',      v:s4.irc_method?s4.irc_method.replace('Gonzalez-Schlegel steepest descent','G-S mass-weighted'):'mass-weighted'},
+              {k:'IRC Frames',      v:s4.irc_frames?.length?`${s4.irc_frames.length} frames`:'—'},
+              {k:'Temperature',     v:s4.temperature?`${s4.temperature} K`:'—'},
             ].map(({k,v})=>(
               <div key={k} style={{borderLeft:'2px solid var(--border)',paddingLeft:14}}>
                 <div style={{fontSize:9,fontWeight:600,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:5}}>{k}</div>
-                <div style={{...mono,fontSize:12,color:'var(--text)',fontWeight:500}}>{v}</div>
+                <div style={{...mono,fontSize:12,color:'var(--text)',fontWeight:500,lineHeight:1.4}}>{v}</div>
               </div>
             ))}
           </div>
@@ -1304,11 +1330,11 @@ function SettingsPage({ settings, setSettings, mode, setMode }) {
   const [draft, setDraft] = useState(settings)
   const save = () => {
     setSettings(draft)
-    localStorage.setItem('molsim_api_url', draft.apiUrl)
-    localStorage.setItem('molsim_default_temp', draft.defaultTemp)
-    localStorage.setItem('molsim_fps_cap', String(draft.fpsCap))
-    localStorage.setItem('molsim_atom_style', draft.atomStyle)
-    localStorage.setItem('molsim_mode', mode)
+    localStorage.setItem('stygian_api_url', draft.apiUrl)
+    localStorage.setItem('stygian_default_temp', draft.defaultTemp)
+    localStorage.setItem('stygian_fps_cap', String(draft.fpsCap))
+    localStorage.setItem('stygian_atom_style', draft.atomStyle)
+    localStorage.setItem('stygian_mode', mode)
   }
   const field = (label, el) => (
     <div>
@@ -1327,13 +1353,13 @@ function SettingsPage({ settings, setSettings, mode, setMode }) {
   return (
     <div style={{flex:1,overflowY:'auto',padding:40,background:'var(--bg)'}}>
       <div style={{marginBottom:40,maxWidth:720}}>
-        <div style={{fontSize:10,fontWeight:600,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-dim)',marginBottom:8}}>System Config · v9.3.4</div>
+        <div style={{fontSize:10,fontWeight:600,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-dim)',marginBottom:8}}>System Config · v11.0.0</div>
         <div style={{...serif,fontWeight:400,fontSize:34,color:'var(--text)',lineHeight:1.1,marginBottom:10}}>Preferences &<br/>Control</div>
         <div style={{fontSize:13,color:'var(--text-dim)',lineHeight:1.6,maxWidth:480}}>Configure your Modal deployment endpoint and simulation defaults.</div>
       </div>
 
       {[
-        {num:'I',title:'API Configuration',desc:'Connect your Modal v9 deployment. Enter the base URL — endpoints are derived automatically.',fields:(
+        {num:'I',title:'API Configuration',desc:'Connect your Modal v11 deployment. Enter the base URL — endpoints are derived automatically.',fields:(
           <>
             {field('Modal Base URL (e.g. https://xxx.modal.run)',input(draft.apiUrl,v=>setDraft(d=>({...d,apiUrl:v}))))}
             {field('API Token (optional)',input('','()=>{}','password',{placeholder:'Bearer token if auth enabled'}))}
@@ -1517,7 +1543,7 @@ function LandingPage({ onEnter }) {
         animation:'landingFadeUp 0.6s ease both',
       }}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
-          <span style={{fontFamily:"'DM Serif Display',serif",fontSize:19,color:'#1a1208',letterSpacing:'-0.01em'}}>Fervor</span>
+          <span style={{fontFamily:"'DM Serif Display',serif",fontSize:19,color:'#1a1208',letterSpacing:'-0.01em'}}>Stygian</span>
         </div>
         <button onClick={handleEnter} style={{
           padding:'8px 18px', fontSize:12, fontWeight:600,
@@ -1559,7 +1585,7 @@ function LandingPage({ onEnter }) {
           letterSpacing:'0.07em', textTransform:'uppercase',
         }}>
           <span style={{width:5,height:5,borderRadius:'50%',background:'#c2692a',display:'inline-block',flexShrink:0,animation:'pulse 2s ease-in-out infinite'}}/>
-          Molecular Dynamics · v9.0
+          Molecular Simulation · v11.0
         </div>
 
         {/* Headline */}
@@ -1649,7 +1675,7 @@ function LandingPage({ onEnter }) {
         borderTop:'1px solid rgba(194,105,42,0.1)',
         animation:'landingFadeUp 0.7s 0.55s ease both', opacity:0,
       }}>
-        <div style={{fontSize:10,color:'#a08060'}}>© 2026 Fervor</div>
+        <div style={{fontSize:10,color:'#a08060'}}>© 2026 Stygian</div>
         <div style={{display:'flex',gap:16}}>
           {['Privacy','Terms','Status'].map(l=>(
             <span key={l} style={{fontSize:10,color:'#a08060',cursor:'pointer'}}>{l}</span>
@@ -1666,7 +1692,7 @@ function LandingPage({ onEnter }) {
 export default function App() {
   const [page, setPage]         = useState('landing')
   const [tab, setTab]           = useState('simulation')
-  const [mode, setMode]         = useState(()=>localStorage.getItem('molsim_mode')||'fast')
+  const [mode, setMode]         = useState(()=>localStorage.getItem('stygian_mode')||'fast')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sessionCount, setSessionCount] = useState(1)
   const [sessionId, setSessionId]       = useState('001-ALPHA-00')
@@ -1675,7 +1701,7 @@ export default function App() {
   // Pipeline
   const [pipeStatus, setPipeStatus] = useState('idle')
   const [pipeSteps, setPipeSteps]   = useState([])
-  const [pipeLogs, setPipeLogs]     = useState([{text:'Fervor v9.0 engine ready. Awaiting reaction prompt.',type:'info',time:'00:00'}])
+  const [pipeLogs, setPipeLogs]     = useState([{text:'Stygian v11.0 engine ready. Awaiting reaction prompt.',type:'info',time:'00:00'}])
   const [pipeResult, setPipeResult] = useState(null)
   const [callId, setCallId]         = useState(null)
   const [elapsedSec, setElapsedSec] = useState(0)
@@ -1694,10 +1720,10 @@ export default function App() {
   const [temp, setTemp]       = useState(300)
   const [prompt, setPrompt]   = useState('')
   const [settings, setSettings] = useState(()=>({
-    apiUrl:     localStorage.getItem('molsim_api_url')||'',
-    defaultTemp:localStorage.getItem('molsim_default_temp')||'300',
-    fpsCap:     parseInt(localStorage.getItem('molsim_fps_cap')||'60'),
-    atomStyle:  localStorage.getItem('molsim_atom_style')||'ball-stick',
+    apiUrl:     localStorage.getItem('stygian_api_url')||'',
+    defaultTemp:localStorage.getItem('stygian_default_temp')||'300',
+    fpsCap:     parseInt(localStorage.getItem('stygian_fps_cap')||'60'),
+    atomStyle:  localStorage.getItem('stygian_atom_style')||'ball-stick',
   }))
 
   // Derived from result
@@ -1745,7 +1771,7 @@ export default function App() {
     pollTimer.current = setInterval(async()=>{
       try {
         const statusUrl = modalUrls.current?.status
-          || 'https://shreyyasshreyyas--molsim-pipeline-api-pipeline-status.modal.run/'
+          || 'https://shreyyasshreyyas--stygian-pipeline-api-pipeline-status.modal.run/'
         const resp = await fetch(`${statusUrl}?call_id=${callId}`)
         const data = await resp.json()
 
@@ -1830,7 +1856,7 @@ export default function App() {
     addLog(`Spawning pipeline — mode: ${mode} | solvent: ${solvent} | T: ${temp}K`,'info')
 
     // Resolve Modal base URL: use custom apiUrl from settings if set, else default deployment
-    const DEFAULT_BASE = 'https://shreyyasshreyyas--molsim-pipeline'
+    const DEFAULT_BASE = 'https://shreyyasshreyyas--stygian-pipeline'
     const rawBase = (settings.apiUrl||'').trim().replace(/\/+$/,'')
     // If user pasted a full endpoint URL, strip down to base; otherwise use as-is or fall back
     const modalBase = rawBase
