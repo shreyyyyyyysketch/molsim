@@ -24,6 +24,17 @@ const CAFFEINE_POSITIONS = [
   [0.0492,-0.5,1.08]
 ]
 
+// ── useIsMobile hook — responds to resize, no stale window.innerWidth ────────
+function useIsMobile(breakpoint=768) {
+  const [isMob, setIsMob] = useState(()=>window.innerWidth<=breakpoint)
+  useEffect(()=>{
+    const handler = ()=>setIsMob(window.innerWidth<=breakpoint)
+    window.addEventListener('resize', handler)
+    return ()=>window.removeEventListener('resize', handler)
+  }, [breakpoint])
+  return isMob
+}
+
 // ── Error Boundary — prevents white screen on any runtime crash ──────────────
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null } }
@@ -614,9 +625,21 @@ const mono = { fontFamily:"'JetBrains Mono',monospace" }
 const serif = { fontFamily:"'DM Serif Display',serif" }
 const sans = { fontFamily:"'DM Sans',sans-serif" }
 
+// ── useWindowWidth hook — reactive to resize ──────────────
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth)
+  useEffect(()=>{
+    const handler = ()=>setWidth(window.innerWidth)
+    window.addEventListener('resize', handler)
+    return ()=>window.removeEventListener('resize', handler)
+  },[])
+  return width
+}
+
 // ── SIDEBAR ───────────────────────────────────────────────
 
 function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
+  const isMob = useWindowWidth() <= 768
   const items=[{id:'dashboard',label:'Dashboard'},{id:'library',label:'Library'},{id:'settings',label:'Settings'}]
   const icons={
     dashboard:<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" style={{width:14,height:14}}><rect x="1" y="1" width="5" height="5"/><rect x="8" y="1" width="5" height="5"/><rect x="1" y="8" width="5" height="5"/><rect x="8" y="8" width="5" height="5"/></svg>,
@@ -634,7 +657,7 @@ function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
         borderRight:'1px solid rgba(210,198,180,0.55)',
         boxShadow:'2px 0 24px rgba(30,20,10,0.07), 1px 0 0 rgba(255,255,255,0.6) inset',
         display:'flex',flexDirection:'column',flexShrink:0,zIndex:100,
-        ...(window.innerWidth<=768?{position:'fixed',top:0,left:0,bottom:0,transform:open?'translateX(0)':'translateX(-100%)',transition:'transform 0.3s cubic-bezier(0.4,0,0.2,1)'}:{})
+        ...(isMob?{position:'fixed',top:0,left:0,bottom:0,transform:open?'translateX(0)':'translateX(-100%)',transition:'transform 0.3s cubic-bezier(0.4,0,0.2,1)'}:{})
       }}>
         <div style={{padding:'22px 20px 18px',borderBottom:'1px solid var(--border)'}}>
           <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:2}}>
@@ -690,6 +713,7 @@ function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
 // ── HEADER ────────────────────────────────────────────────
 
 function Header({ sessionId, page, setPage, setSidebarOpen }) {
+  const isMob = useWindowWidth() <= 768
   const titles={dashboard:'Reaction Simulation',library:'Project Library',settings:'Preferences'}
   return (
     <header style={{
@@ -705,7 +729,7 @@ function Header({ sessionId, page, setPage, setSidebarOpen }) {
       <button onClick={()=>setSidebarOpen(o=>!o)} style={{
         display:'none',flexDirection:'column',gap:4,cursor:'pointer',padding:6,
         background:'none',border:'none',borderRadius:6,
-        ...(window.innerWidth<=768?{display:'flex'}:{})
+        ...(isMob?{display:'flex'}:{})
       }}>
         {[0,1,2].map(i=><span key={i} style={{display:'block',width:16,height:1.5,background:'var(--text-mid)',borderRadius:1}}/>)}
       </button>
@@ -776,7 +800,7 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
 
   const [showMetrics, setShowMetrics] = useState(false)
   const running = pipeStatus === 'running'
-  const isMobile = window.innerWidth <= 768
+  const isMobile = useWindowWidth() <= 768
 
   const s6 = pipeResult?.steps?.[5] || {}
   const MetricsPanel = () => (
@@ -1316,9 +1340,9 @@ function AnalyticsTab({ energyProfile, ircFrames, s4, pipeResult, previewData })
         <EnergyProfileChart energyProfile={energyProfile}/>
         <div style={{display:'flex',gap:24,marginTop:16}}>
           {[
-            {k:'ΔG‡ (gas)',v:s4?.delta_g_barrier_gas_kcal!=null?`${s4.delta_g_barrier_gas_kcal.toFixed(2)} kcal/mol`:'—'},
-            {k:'ΔG‡ (solvated)',v:s4?.delta_g_barrier_kcal!=null?`${s4.delta_g_barrier_kcal.toFixed(2)} kcal/mol`:'—'},
-            {k:'ΔG rxn',v:s4?.delta_g_rxn_kcal!=null?`${s4.delta_g_rxn_kcal.toFixed(2)} kcal/mol`:'—'},
+            {k:'ΔG‡ (gas)',v:typeof s4?.delta_g_barrier_gas_kcal==='number'?`${s4.delta_g_barrier_gas_kcal.toFixed(2)} kcal/mol`:'—'},
+            {k:'ΔG‡ (solvated)',v:typeof s4?.delta_g_barrier_kcal==='number'?`${s4.delta_g_barrier_kcal.toFixed(2)} kcal/mol`:'—'},
+            {k:'ΔG rxn',v:typeof s4?.delta_g_rxn_kcal==='number'?`${s4.delta_g_rxn_kcal.toFixed(2)} kcal/mol`:'—'},
           ].map(({k,v})=>(
             <div key={k}>
               <div style={{fontSize:9,fontWeight:600,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:4}}>{k}</div>
@@ -1343,14 +1367,14 @@ function AnalyticsTab({ energyProfile, ircFrames, s4, pipeResult, previewData })
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:16}}>
             {[
               {k:'Rate Constant',   v:s4.rate_constant_s1?`${s4.rate_constant_s1} ${s4.rate_constant_units||'s⁻¹'}`:'—'},
-              {k:'Rate Method',     v:s4.rrkm_available?`RRKM (κ=${s4.wigner_kappa?.toFixed(3)||'—'})`:'Eyring TST'},
+              {k:'Rate Method',     v:s4.rrkm_available?`RRKM (κ=${typeof s4.wigner_kappa==='number'?s4.wigner_kappa.toFixed(3):'—'})`:'Eyring TST'},
               {k:'Reaction Order',  v:s4.is_bimolecular?'Bimolecular (k₂)':'Unimolecular (k₁)'},
               {k:'Entropic Penalty',v:s4.t_ds_correction_kcal?`+${s4.t_ds_correction_kcal} kcal/mol`:'n/a'},
               {k:'Energy Method',   v:s4.energy_method||'—'},
               {k:'Solvation',       v:s4.solvation_method||'TPSA-Born'},
               {k:'Saddle Point',    v:s4.saddle_point_found!==false?'✓ Found':'✗ Not found'},
-              {k:'TS Validation',   v:s4.is_true_ts===true?`✓ True TS (${s4.ts_imaginary_cm1?.toFixed(0)||'?'} cm⁻¹)`:s4.is_true_ts===false?'⚠ Not confirmed':'—'},
-              {k:'ZPE at TS',       v:s4.zpe_ts_kcal!=null?`${s4.zpe_ts_kcal.toFixed(2)} kcal/mol`:'—'},
+              {k:'TS Validation',   v:s4.is_true_ts===true?`✓ True TS (${typeof s4.ts_imaginary_cm1==='number'?s4.ts_imaginary_cm1.toFixed(0):'?'} cm⁻¹)`:s4.is_true_ts===false?'⚠ Not confirmed':'—'},
+              {k:'ZPE at TS',       v:typeof s4.zpe_ts_kcal==='number'?`${s4.zpe_ts_kcal.toFixed(2)} kcal/mol`:'—'},
               {k:'IRC Method',      v:s4.irc_method?s4.irc_method.replace('Gonzalez-Schlegel steepest descent','G-S mass-weighted'):'mass-weighted'},
               {k:'IRC Frames',      v:s4.irc_frames?.length?`${s4.irc_frames.length} frames`:'—'},
               {k:'Temperature',     v:s4.temperature?`${s4.temperature} K`:'—'},
@@ -1458,7 +1482,7 @@ function SettingsPage({ settings, setSettings, mode, setMode }) {
         {num:'I',title:'API Configuration',desc:'Connect your Modal v11 deployment. Enter the base URL — endpoints are derived automatically.',fields:(
           <>
             {field('Modal Base URL (e.g. https://xxx.modal.run)',input(draft.apiUrl,v=>setDraft(d=>({...d,apiUrl:v}))))}
-            {field('API Token (optional)',input('','()=>{}','password',{placeholder:'Bearer token if auth enabled'}))}
+            {field('API Token (optional)',input('',()=>{},'password',{placeholder:'Bearer token if auth enabled'}))}
           </>
         )},
         {num:'II',title:'Simulation Defaults',desc:'Default parameters for new experiments.',fields:(
@@ -1832,8 +1856,8 @@ function AppInner() {
 
   // Derived from result
   const s4 = pipeResult?.steps?.[3] || {}
-  const barrier       = s4.delta_g_barrier_kcal   != null ? s4.delta_g_barrier_kcal.toFixed(2)   : null
-  const rxnVal        = s4.delta_g_rxn_kcal        != null ? s4.delta_g_rxn_kcal.toFixed(2)        : null
+  const barrier       = typeof s4.delta_g_barrier_kcal === 'number' ? s4.delta_g_barrier_kcal.toFixed(2) : null
+  const rxnVal        = typeof s4.delta_g_rxn_kcal     === 'number' ? s4.delta_g_rxn_kcal.toFixed(2)     : null
   const rateStr       = s4.rate_constant_s1        || null
   const rateUnits     = s4.rate_constant_units      || 's⁻¹'
   const ircFrames     = s4.irc_frames               || []
@@ -1910,7 +1934,7 @@ function AppInner() {
     }, 3000)
 
     return ()=>clearInterval(pollTimer.current)
-  }, [callId, pipeStatus, mode])
+  }, [callId, pipeStatus])
 
   function getBaseUrl(url) {
     try { return new URL(url).origin } catch { return url.replace(/\/api_pipeline.*$/,'') }
@@ -1930,7 +1954,7 @@ function AppInner() {
     const s4=steps[3]||{},s2=steps[1]||{}
     const irc=s4.irc_frames||[],syms=s2.atom_symbols||[]
     if(irc.length&&syms.length&&irc[0]?.pos) viewerRef.current?.setIRC(irc,syms)
-    const b=s4.delta_g_barrier_kcal!=null?s4.delta_g_barrier_kcal.toFixed(2):'—'
+    const b=typeof s4.delta_g_barrier_kcal==='number'?s4.delta_g_barrier_kcal.toFixed(2):'—'
     const r=s4.rate_constant_s1||'—', u=s4.rate_constant_units||'s⁻¹'
     addLog(`Pipeline complete — ΔG‡ = ${b} kcal/mol | k = ${r} ${u}`,'success')
     setSimulations(prev=>[{
