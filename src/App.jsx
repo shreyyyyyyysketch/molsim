@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react"
+import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react"
 import * as THREE from "three"
 
 // ── CONSTANTS ─────────────────────────────────────────────
@@ -23,6 +23,24 @@ const CAFFEINE_POSITIONS = [
   [-0.1,-2.9,0.0],[-1.06,-1.8,0.0],[0.78,-2.2,0.0],
   [0.0492,-0.5,1.08]
 ]
+
+// ── Error Boundary — prevents white screen on any runtime crash ──────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(e) { return { error: e } }
+  componentDidCatch(e, info) { console.error('App crashed:', e, info) }
+  render() {
+    if (this.state.error) return (
+      <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#0c0a08',color:'#f0e8d8',fontFamily:'monospace',padding:32,gap:16}}>
+        <div style={{fontSize:32,opacity:0.3}}>⬡</div>
+        <div style={{fontSize:16,fontWeight:600}}>Something crashed</div>
+        <div style={{fontSize:11,opacity:0.5,maxWidth:400,textAlign:'center',lineHeight:1.6}}>{this.state.error?.message}</div>
+        <button onClick={()=>window.location.reload()} style={{marginTop:8,padding:'8px 20px',background:'#c2692a',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontSize:12}}>Reload</button>
+      </div>
+    )
+    return this.props.children
+  }
+}
 
 const STEP_NAMES = ['LLM Gateway','Linear Interp TS','Solvation','MACE + DFT','Surface Hop','Kinetic Summary']
 const SOLVENTS = [
@@ -153,7 +171,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
     t.current.renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true})
     t.current.renderer.setSize(W,H)
     t.current.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2))
-    t.current.renderer.setClearColor(0xf0ede8, 1)
+    t.current.renderer.setClearColor(0xe8e2d6, 1)
     t.current.renderer.shadowMap.enabled = true
 
     // Light-theme lighting: strong ambient for clean visibility
@@ -240,7 +258,7 @@ const MolViewer = forwardRef(function MolViewer({ running, fpsCap, atomStyle, on
   }))
 
   return (
-    <div ref={areaRef} style={{position:'relative',flex:1,background:'#f0ede8',minHeight:0,minWidth:0}}>
+    <div ref={areaRef} style={{position:'relative',flex:1,background:'linear-gradient(145deg,#ede8dc,#e4ddd0,#ddd5c4)',minHeight:0,minWidth:0}}>
       <canvas ref={canvasRef} style={{width:'100%',height:'100%',display:'block'}} />
     </div>
   )
@@ -497,9 +515,13 @@ function ReactionPreview2D({ previewData }) {
 
   return (
     <div style={{
-      background:'var(--surface)',border:'1px solid var(--border)',
-      borderRadius:10,padding:'12px 16px',marginBottom:0,
-      animation:'fadeIn 0.4s ease',
+      background:'rgba(255,252,247,0.65)',
+      backdropFilter:'blur(20px) saturate(1.5)',
+      WebkitBackdropFilter:'blur(20px) saturate(1.5)',
+      border:'1px solid rgba(255,245,225,0.75)',
+      boxShadow:'0 8px 32px rgba(30,20,10,0.10), 0 1px 0 rgba(255,255,255,0.75) inset',
+      borderRadius:14,padding:'12px 16px',marginBottom:0,
+      animation:'fadeInScale 0.4s cubic-bezier(0.34,1.2,0.64,1)',
     }}>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
         <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-dim)'}}>2D Preview</div>
@@ -605,9 +627,13 @@ function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
     <>
       {open && <div onClick={()=>setOpen(false)} style={{position:'fixed',inset:0,background:'rgba(20,18,16,0.4)',zIndex:99,backdropFilter:'blur(4px)'}}/>}
       <aside style={{
-        width:224,background:'var(--surface)',borderRight:'1px solid var(--border)',
+        width:224,
+        background:'rgba(255,252,247,0.78)',
+        backdropFilter:'blur(24px) saturate(1.5)',
+        WebkitBackdropFilter:'blur(24px) saturate(1.5)',
+        borderRight:'1px solid rgba(210,198,180,0.55)',
+        boxShadow:'2px 0 24px rgba(30,20,10,0.07), 1px 0 0 rgba(255,255,255,0.6) inset',
         display:'flex',flexDirection:'column',flexShrink:0,zIndex:100,
-        boxShadow:window.innerWidth<=768?'var(--shadow-md)':'none',
         ...(window.innerWidth<=768?{position:'fixed',top:0,left:0,bottom:0,transform:open?'translateX(0)':'translateX(-100%)',transition:'transform 0.3s cubic-bezier(0.4,0,0.2,1)'}:{})
       }}>
         <div style={{padding:'22px 20px 18px',borderBottom:'1px solid var(--border)'}}>
@@ -645,14 +671,15 @@ function Sidebar({ page, setPage, open, setOpen, onNewExperiment }) {
         <div style={{padding:'12px 10px 18px',borderTop:'1px solid var(--border)'}}>
           <button onClick={onNewExperiment} style={{
             width:'100%',padding:'10px 12px',
-            background:'linear-gradient(135deg,var(--accent-bright),var(--accent))',
+            background:'linear-gradient(135deg,#e07830 0%,#b85e20 100%)',
             color:'#fff',border:'none',cursor:'pointer',
-            ...sans,fontSize:12,fontWeight:600,borderRadius:9,
-            letterSpacing:'0.01em',transition:'opacity 0.15s,box-shadow 0.15s',
-            boxShadow:'0 2px 10px rgba(194,105,42,0.25)',
+            ...sans,fontSize:12,fontWeight:600,borderRadius:11,
+            letterSpacing:'0.01em',
+            transition:'transform 0.18s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.18s ease',
+            boxShadow:'0 4px 18px rgba(194,105,42,0.35), 0 1px 0 rgba(255,255,255,0.22) inset',
           }}
-          onMouseEnter={e=>{e.currentTarget.style.opacity='0.9';e.currentTarget.style.boxShadow='0 4px 16px rgba(194,105,42,0.35)'}}
-          onMouseLeave={e=>{e.currentTarget.style.opacity='1';e.currentTarget.style.boxShadow='0 2px 10px rgba(194,105,42,0.25)'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';e.currentTarget.style.boxShadow='0 8px 28px rgba(194,105,42,0.45), 0 1px 0 rgba(255,255,255,0.22) inset'}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 4px 18px rgba(194,105,42,0.35), 0 1px 0 rgba(255,255,255,0.22) inset'}}
           >+ New Experiment</button>
         </div>
       </aside>
@@ -666,9 +693,14 @@ function Header({ sessionId, page, setPage, setSidebarOpen }) {
   const titles={dashboard:'Reaction Simulation',library:'Project Library',settings:'Preferences'}
   return (
     <header style={{
-      height:56,borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',
-      padding:'0 24px',gap:16,flexShrink:0,background:'var(--surface)',
-      boxShadow:'0 1px 0 var(--border)',
+      height:56,
+      borderBottom:'1px solid rgba(210,198,180,0.45)',
+      display:'flex',alignItems:'center',
+      padding:'0 24px',gap:16,flexShrink:0,
+      background:'rgba(255,252,247,0.75)',
+      backdropFilter:'blur(20px) saturate(1.5)',
+      WebkitBackdropFilter:'blur(20px) saturate(1.5)',
+      boxShadow:'0 1px 0 rgba(255,255,255,0.65) inset, 0 2px 16px rgba(30,20,10,0.06)',
     }}>
       <button onClick={()=>setSidebarOpen(o=>!o)} style={{
         display:'none',flexDirection:'column',gap:4,cursor:'pointer',padding:6,
@@ -708,7 +740,11 @@ function DashboardPage(props) {
   const { tab, setTab, ...rest } = props
   return (
     <div style={{display:'flex',flexDirection:'column',flex:1,overflow:'hidden'}}>
-      <div style={{display:'flex',borderBottom:'1px solid var(--border)',background:'var(--surface)',flexShrink:0,padding:'0 12px'}}>
+      <div style={{display:'flex',borderBottom:'1px solid rgba(210,198,180,0.40)',
+        background:'rgba(255,252,247,0.75)',
+        backdropFilter:'blur(16px) saturate(1.4)',
+        WebkitBackdropFilter:'blur(16px) saturate(1.4)',
+        flexShrink:0,padding:'0 12px'}}>
         {['simulation','analytics'].map(t=>(
           <div key={t} onClick={()=>setTab(t)} style={{
             padding:'0 18px',height:42,cursor:'pointer',fontSize:12,fontWeight:tab===t?600:400,
@@ -744,10 +780,14 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
 
   const s6 = pipeResult?.steps?.[5] || {}
   const MetricsPanel = () => (
-    <div style={{background:'var(--surface)',display:'flex',flexDirection:'column',
+    <div style={{display:'flex',flexDirection:'column',
+      background:'rgba(255,252,247,0.72)',
+      backdropFilter:'blur(18px) saturate(1.4)',
+      WebkitBackdropFilter:'blur(18px) saturate(1.4)',
       ...(isMobile
-        ? {borderTop:'1px solid var(--border)',overflowY:'auto',maxHeight:'50vh'}
-        : {width:216,borderLeft:'1px solid var(--border)',overflowY:'auto',flexShrink:0})
+        ? {borderTop:'1px solid rgba(210,198,180,0.40)',overflowY:'auto',maxHeight:'50vh'}
+        : {width:216,borderLeft:'1px solid rgba(210,198,180,0.40)',overflowY:'auto',flexShrink:0,
+           boxShadow:'-1px 0 0 rgba(255,255,255,0.55) inset'})
     }}>
       <div style={{padding:'14px 16px 11px',borderBottom:'1px solid var(--border2)',background:'var(--surface2)',display:'flex',alignItems:'center',gap:8}}>
         <div style={{width:4,height:4,borderRadius:'50%',background:'var(--accent)',flexShrink:0}}/>
@@ -913,7 +953,15 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
           </div>
           {pipeStatus==='idle'&&viewerRef.current?.hasMol?.()&&(
             <div style={{position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',pointerEvents:'none'}}>
-              <div style={{background:'rgba(255,255,255,0.92)',border:'1px solid var(--border)',padding:'5px 16px',display:'flex',flexDirection:'column',alignItems:'center',gap:1,backdropFilter:'blur(8px)',borderRadius:8}}>
+              <div style={{
+                background:'rgba(255,252,247,0.72)',
+                backdropFilter:'blur(16px) saturate(1.4)',
+                WebkitBackdropFilter:'blur(16px) saturate(1.4)',
+                border:'1px solid rgba(255,245,225,0.75)',
+                boxShadow:'0 4px 20px rgba(30,20,10,0.10), 0 1px 0 rgba(255,255,255,0.7) inset',
+                padding:'6px 18px',display:'flex',flexDirection:'column',alignItems:'center',gap:1,borderRadius:12,
+                animation:'fadeIn 0.4s ease',
+              }}>
                 <div style={{fontWeight:500,fontSize:13,color:'var(--text)',letterSpacing:'0.01em'}}>Caffeine</div>
                 <div style={{...mono,fontSize:8,color:'var(--text-dim)',letterSpacing:'0.08em'}}>C₈H₁₀N₄O₂ · DEMO MOLECULE</div>
               </div>
@@ -969,8 +1017,9 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
         <div style={{borderTop:'2px solid var(--accent)',padding:'10px 12px',display:'flex',gap:8,alignItems:'flex-end',background:'var(--surface)',flexShrink:0,minHeight:56}}>
           <div style={{flex:1,border:'1px solid var(--border)',background:'var(--surface2)',display:'flex',alignItems:'center',gap:6,padding:'0 12px',borderRadius:10}}>
             <span style={{color:'var(--text-dim)',fontSize:13,flexShrink:0}}>⬡</span>
-            <textarea value={prompt} onChange={e=>{setPrompt(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,72)+'px'}}
+            <textarea value={prompt} onChange={e=>setPrompt(e.target.value)}
               onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();onRun()}}}
+              onChange={e=>{setPrompt(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,72)+'px'}}
               placeholder="Describe a reaction…"
               rows={1} style={{
                 flex:1,background:'transparent',border:'none',padding:'8px 0',
@@ -1001,7 +1050,12 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
     <div style={{display:'flex',flex:1,overflow:'hidden'}}>
 
       {/* LEFT CONFIG */}
-      <div style={{width:216,borderRight:'1px solid var(--border)',display:'flex',flexDirection:'column',overflowY:'auto',flexShrink:0,background:'var(--surface)'}}>
+      <div style={{width:216,borderRight:'1px solid rgba(210,198,180,0.40)',display:'flex',flexDirection:'column',overflowY:'auto',flexShrink:0,
+        background:'rgba(255,252,247,0.72)',
+        backdropFilter:'blur(18px) saturate(1.4)',
+        WebkitBackdropFilter:'blur(18px) saturate(1.4)',
+        boxShadow:'1px 0 0 rgba(255,255,255,0.55) inset',
+      }}>
         <ConfigSection label="Accuracy Mode">
           <div style={{display:'flex',border:'1px solid var(--border)',overflow:'hidden',borderRadius:8,background:'var(--surface2)'}}>
             {['fast','accurate'].map(m=>(
@@ -1073,39 +1127,65 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
 
       {/* CENTER */}
       <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
-        <div style={{flex:1,position:'relative',background:'#ede9e2',minHeight:0}}>
+        <div style={{flex:1,position:'relative',
+          background:'linear-gradient(145deg, #ede8dc 0%, #e4ddd0 50%, #ddd5c4 100%)',
+          minHeight:0}}>
           <MolViewer ref={viewerRef} running={running} fpsCap={60} atomStyle="ball-stick"/>
           {!viewerRef.current?.hasMol?.() && pipeStatus==='idle' && (
-            <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,pointerEvents:'none'}}>
-              <div style={{width:56,height:56,borderRadius:'50%',background:'rgba(194,105,42,0.06)',border:'1px solid rgba(194,105,42,0.12)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <div style={{fontSize:24,color:'var(--accent)',opacity:0.35}}>⬡</div>
+            <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,pointerEvents:'none'}}>
+              <div style={{
+                width:64,height:64,borderRadius:'50%',
+                background:'rgba(255,252,247,0.55)',
+                backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',
+                border:'1px solid rgba(255,245,225,0.70)',
+                boxShadow:'0 8px 32px rgba(30,20,10,0.10), 0 1px 0 rgba(255,255,255,0.7) inset',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                animation:'glowBreath 3s ease-in-out infinite',
+              }}>
+                <div style={{fontSize:26,color:'var(--accent)',opacity:0.5}}>⬡</div>
               </div>
-              <div style={{...serif,fontWeight:400,fontSize:16,color:'var(--text-dim)',opacity:0.6}}>No simulation active</div>
-              <div style={{fontSize:10,color:'var(--text-dim)',letterSpacing:'0.04em',opacity:0.4}}>Enter a reaction prompt below to begin</div>
+              <div style={{...serif,fontWeight:400,fontSize:15,color:'var(--text-dim)',opacity:0.55}}>No simulation active</div>
+              <div style={{fontSize:10,color:'var(--text-dim)',letterSpacing:'0.04em',opacity:0.35}}>Enter a reaction prompt below to begin</div>
             </div>
           )}
           <div style={{position:'absolute',top:16,left:16,display:'flex',gap:8,alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.92)',border:'1px solid var(--border)',padding:'5px 11px',borderRadius:20,...mono,fontSize:9,letterSpacing:'0.06em',color:'var(--text-mid)',backdropFilter:'blur(8px)'}}>
-              <div style={{width:5,height:5,borderRadius:'50%',background:running?'var(--green)':'var(--text-dim)',animation:running?'pulse 1.2s ease-in-out infinite':'none'}}/>
+            <div style={{display:'flex',alignItems:'center',gap:6,
+              background:'rgba(255,252,247,0.72)',
+              backdropFilter:'blur(16px) saturate(1.4)',
+              WebkitBackdropFilter:'blur(16px) saturate(1.4)',
+              border:'1px solid rgba(255,245,225,0.80)',
+              boxShadow:'0 2px 12px rgba(30,20,10,0.10), 0 1px 0 rgba(255,255,255,0.7) inset',
+              padding:'5px 12px',borderRadius:20,...mono,fontSize:9,letterSpacing:'0.06em',color:'var(--text-mid)'}}>
+              <div style={{width:5,height:5,borderRadius:'50%',background:running?'var(--green)':'var(--text-dim)',
+                animation:running?'pulseGlow 1.4s ease-in-out infinite':'none',flexShrink:0}}/>
               {running?'LIVE':pipeStatus==='complete'?'COMPLETE':'IDLE'}
             </div>
           </div>
           <div style={{position:'absolute',bottom:16,right:16,display:'flex',gap:8}}>
             {[{icon:'↺',fn:()=>viewerRef.current?.resetView()},{icon:'⤢',fn:()=>viewerRef.current?.fullscreen()}].map(b=>(
               <div key={b.icon} onClick={b.fn} style={{
-                width:32,height:32,background:'rgba(255,255,255,0.92)',border:'1px solid var(--border)',
-                borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',
-                color:'var(--text-dim)',fontSize:13,backdropFilter:'blur(8px)',transition:'color 0.15s,border-color 0.15s,box-shadow 0.15s',
-                boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+                width:34,height:34,
+                background:'rgba(255,252,247,0.68)',
+                backdropFilter:'blur(16px) saturate(1.4)',
+                WebkitBackdropFilter:'blur(16px) saturate(1.4)',
+                border:'1px solid rgba(255,245,225,0.75)',
+                boxShadow:'0 2px 10px rgba(30,20,10,0.10), 0 1px 0 rgba(255,255,255,0.75) inset',
+                borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',
+                color:'var(--text-dim)',fontSize:13,
+                transition:'color 0.15s,border-color 0.15s,transform 0.15s,box-shadow 0.15s',
               }}
-              onMouseEnter={e=>{e.currentTarget.style.color='var(--accent)';e.currentTarget.style.borderColor='var(--accent)';e.currentTarget.style.boxShadow='0 2px 8px rgba(194,105,42,0.18)'}}
-              onMouseLeave={e=>{e.currentTarget.style.color='var(--text-dim)';e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'}}
+              onMouseEnter={e=>{e.currentTarget.style.color='var(--accent)';e.currentTarget.style.borderColor='rgba(194,105,42,0.35)';e.currentTarget.style.transform='translateY(-1px)';e.currentTarget.style.boxShadow='0 4px 16px rgba(194,105,42,0.18), 0 1px 0 rgba(255,255,255,0.8) inset'}}
+              onMouseLeave={e=>{e.currentTarget.style.color='var(--text-dim)';e.currentTarget.style.borderColor='rgba(255,245,225,0.75)';e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 2px 10px rgba(30,20,10,0.10), 0 1px 0 rgba(255,255,255,0.75) inset'}}
               >{b.icon}</div>
             ))}
           </div>
         </div>
 
-        <div style={{height:running?180:120,borderTop:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',flexShrink:0,transition:'height 0.3s ease'}}>
+        <div style={{height:running?180:120,borderTop:'1px solid rgba(210,198,180,0.40)',
+          background:'rgba(255,252,247,0.72)',
+          backdropFilter:'blur(16px) saturate(1.3)',
+          WebkitBackdropFilter:'blur(16px) saturate(1.3)',
+          display:'flex',flexDirection:'column',flexShrink:0,transition:'height 0.3s ease'}}>
           <div style={{display:'flex',alignItems:'center',padding:'6px 16px',borderBottom:'1px solid var(--border2)',gap:8,flexShrink:0,background:'var(--surface2)'}}>
             <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-dim)',flex:1}}>Console</div>
             {running && <div style={{...mono,fontSize:9,color:'var(--green)',letterSpacing:'0.06em',animation:'pulse 1.5s ease-in-out infinite',display:'flex',alignItems:'center',gap:4}}><span style={{width:5,height:5,borderRadius:'50%',background:'var(--green)',display:'inline-block'}}/>LIVE</div>}
@@ -1147,10 +1227,20 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
           </div>
         </div>
 
-        <div style={{borderTop:'1px solid var(--border)',padding:'12px 16px',display:'flex',gap:10,alignItems:'flex-end',background:'var(--surface)',flexShrink:0}}>
-          <div style={{flex:1,border:'1.5px solid var(--border)',background:'var(--bg)',display:'flex',alignItems:'center',gap:8,padding:'0 14px',borderRadius:11,transition:'border-color 0.2s,box-shadow 0.2s'}}
-            onFocusCapture={e=>{ e.currentTarget.style.borderColor='var(--accent)'; e.currentTarget.style.boxShadow='0 0 0 3px var(--accent-dim)' }}
-            onBlurCapture={e=>{ e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.boxShadow='none' }}
+        <div style={{borderTop:'1px solid rgba(194,105,42,0.25)',padding:'12px 16px',display:'flex',gap:10,alignItems:'flex-end',
+          background:'rgba(255,252,247,0.80)',
+          backdropFilter:'blur(20px) saturate(1.4)',
+          WebkitBackdropFilter:'blur(20px) saturate(1.4)',
+          boxShadow:'0 -1px 0 rgba(255,255,255,0.7) inset',
+          flexShrink:0}}>
+          <div style={{flex:1,border:'1.5px solid rgba(194,105,42,0.22)',
+            background:'rgba(255,252,248,0.65)',
+            backdropFilter:'blur(12px)',WebkitBackdropFilter:'blur(12px)',
+            boxShadow:'0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 12px rgba(30,20,10,0.06)',
+            display:'flex',alignItems:'center',gap:8,padding:'0 14px',borderRadius:14,
+            transition:'border-color 0.2s,box-shadow 0.2s'}}
+            onFocusCapture={e=>{ e.currentTarget.style.borderColor='rgba(194,105,42,0.55)'; e.currentTarget.style.boxShadow='0 0 0 3px rgba(194,105,42,0.10), 0 1px 0 rgba(255,255,255,0.8) inset' }}
+            onBlurCapture={e=>{ e.currentTarget.style.borderColor='rgba(194,105,42,0.22)'; e.currentTarget.style.boxShadow='0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 12px rgba(30,20,10,0.06)' }}
           >
             <span style={{color:'var(--accent)',fontSize:14,flexShrink:0,opacity:0.7}}>⬡</span>
             <textarea value={prompt} onChange={e=>setPrompt(e.target.value)}
@@ -1164,7 +1254,14 @@ function SimulationTab({ mode, setMode, solvent, setSolvent, temp, setTemp,
           </div>
           {running
             ? <button onClick={onCancel} style={{padding:'10px 18px',background:'var(--red-dim)',color:'var(--red)',border:'1px solid rgba(184,48,48,0.22)',cursor:'pointer',fontSize:12,fontWeight:600,letterSpacing:'0.03em',height:42,whiteSpace:'nowrap',borderRadius:9,transition:'background 0.15s'}}>✕ Cancel</button>
-            : <button onClick={onRun} disabled={!prompt.trim()} style={{padding:'10px 22px',background:prompt.trim()?'linear-gradient(135deg,var(--accent-bright),var(--accent))':'var(--surface3)',color:prompt.trim()?'#fff':'var(--text-dim)',border:'none',cursor:prompt.trim()?'pointer':'not-allowed',fontSize:12,fontWeight:600,height:42,whiteSpace:'nowrap',borderRadius:9,transition:'all 0.15s',boxShadow:prompt.trim()?'0 2px 10px rgba(194,105,42,0.28)':'none',letterSpacing:'-0.01em'}}>Run →</button>
+            : <button onClick={onRun} disabled={!prompt.trim()} style={{padding:'10px 22px',
+                background:prompt.trim()?'linear-gradient(135deg,#e07830,#b85e20)':'rgba(220,212,198,0.6)',
+                color:prompt.trim()?'#fff':'var(--text-dim)',border:'none',
+                cursor:prompt.trim()?'pointer':'not-allowed',fontSize:12,fontWeight:600,height:42,
+                whiteSpace:'nowrap',borderRadius:12,
+                transition:'all 0.18s cubic-bezier(0.34,1.56,0.64,1)',
+                boxShadow:prompt.trim()?'0 4px 16px rgba(194,105,42,0.35), 0 1px 0 rgba(255,255,255,0.25) inset':'none',
+                letterSpacing:'-0.01em'}}>Run →</button>
           }
         </div>
       </div>
@@ -1563,12 +1660,12 @@ function LandingPage({ onEnter }) {
           ? { bottom:'72px', left:'20px', right:'20px' }
           : { top:'50%', left:'50%', transform:'translate(-50%, -50%)', width:'min(520px, 55vw)' }
         ),
-        background:'rgba(250,243,230,0.55)',
-        backdropFilter:'blur(22px) saturate(1.4)',
-        WebkitBackdropFilter:'blur(22px) saturate(1.4)',
-        border:'1px solid rgba(255,240,210,0.7)',
-        borderRadius: isMob ? 20 : 24,
-        boxShadow:'0 8px 48px rgba(60,30,0,0.18), 0 1px 0 rgba(255,255,255,0.6) inset',
+        background:'rgba(255,250,240,0.58)',
+        backdropFilter:'blur(28px) saturate(1.6)',
+        WebkitBackdropFilter:'blur(28px) saturate(1.6)',
+        border:'1px solid rgba(255,242,215,0.80)',
+        borderRadius: isMob ? 22 : 26,
+        boxShadow:'0 16px 64px rgba(60,30,0,0.18), 0 1px 0 rgba(255,255,255,0.75) inset, 0 -1px 0 rgba(30,15,0,0.04) inset',
         padding: isMob ? '28px 20px 24px' : '44px 48px 40px',
         animation:'landingFadeUp 0.8s 0.1s ease both', opacity:0,
       }}>
@@ -1584,7 +1681,7 @@ function LandingPage({ onEnter }) {
           letterSpacing:'0.07em', textTransform:'uppercase',
         }}>
           <span style={{width:5,height:5,borderRadius:'50%',background:'#c2692a',display:'inline-block',flexShrink:0,animation:'pulse 2s ease-in-out infinite'}}/>
-          Molecular Simulation · v11.0
+          Molecular Simulation · v12.0
         </div>
 
         {/* Headline */}
@@ -1620,13 +1717,13 @@ function LandingPage({ onEnter }) {
           <button onClick={handleEnter} style={{
             padding:'13px 28px', fontSize:14, fontWeight:600,
             background:'linear-gradient(135deg,#e07830,#b85e20)',
-            color:'#fff', border:'none', borderRadius:10, cursor:'pointer',
-            boxShadow:'0 4px 20px rgba(194,105,42,0.38)',
-            transition:'transform 0.15s,box-shadow 0.15s',
+            color:'#fff', border:'none', borderRadius:12, cursor:'pointer',
+            boxShadow:'0 6px 28px rgba(194,105,42,0.42), 0 1px 0 rgba(255,255,255,0.22) inset',
+            transition:'transform 0.18s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.18s ease',
             letterSpacing:'-0.01em', flex: isMob?1:'none',
           }}
-          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 30px rgba(194,105,42,0.48)'}}
-          onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 4px 20px rgba(194,105,42,0.38)'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow='0 12px 36px rgba(194,105,42,0.52), 0 1px 0 rgba(255,255,255,0.22) inset'}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 6px 28px rgba(194,105,42,0.42), 0 1px 0 rgba(255,255,255,0.22) inset'}}
           >Launch Simulation →</button>
           <button style={{
             padding:'13px 22px', fontSize:14, fontWeight:500,
@@ -1689,6 +1786,14 @@ function LandingPage({ onEnter }) {
 // ── ROOT APP ──────────────────────────────────────────────
 
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner/>
+    </ErrorBoundary>
+  )
+}
+
+function AppInner() {
   const [page, setPage]         = useState('landing')
   const [tab, setTab]           = useState('simulation')
   const [mode, setMode]         = useState(()=>localStorage.getItem('stygian_mode')||'fast')
@@ -1700,7 +1805,7 @@ export default function App() {
   // Pipeline
   const [pipeStatus, setPipeStatus] = useState('idle')
   const [pipeSteps, setPipeSteps]   = useState([])
-  const [pipeLogs, setPipeLogs]     = useState([{text:'Stygian v11.0 engine ready. Awaiting reaction prompt.',type:'info',time:'00:00'}])
+  const [pipeLogs, setPipeLogs]     = useState([{text:'Stygian v12.0 engine ready. Awaiting reaction prompt.',type:'info',time:'00:00'}])
   const [pipeResult, setPipeResult] = useState(null)
   const [callId, setCallId]         = useState(null)
   const [elapsedSec, setElapsedSec] = useState(0)
@@ -1946,55 +2051,78 @@ export default function App() {
   const globalCss = `
     @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap');
     :root{
-      --bg:#f5f3ef;
-      --surface:#ffffff;
-      --surface2:#f4f2ee;
-      --surface3:#ede9e2;
-      --border:#e4e0d8;
-      --border2:#ebe7e0;
-      --text:#141210;
-      --text-dim:#a89f97;
-      --text-mid:#6b6560;
-      --accent:#c2692a;
-      --accent-dim:rgba(194,105,42,0.09);
-      --accent-bright:#e07830;
-      --accent2:#3a6fa8;
-      --green:#1e7a4a;
-      --green-dim:rgba(30,122,74,0.09);
-      --red:#b83030;
-      --red-dim:rgba(184,48,48,0.09);
-      --shadow-xs:0 1px 3px rgba(20,18,16,0.06),0 1px 2px rgba(20,18,16,0.04);
-      --shadow-sm:0 2px 8px rgba(20,18,16,0.07),0 1px 3px rgba(20,18,16,0.05);
-      --shadow-md:0 4px 16px rgba(20,18,16,0.09),0 2px 6px rgba(20,18,16,0.05);
+      --bg: #f0ece4;
+      --surface: rgba(255,252,247,0.82);
+      --surface-solid: #fffcf7;
+      --surface2: rgba(245,240,230,0.72);
+      --surface3: rgba(232,224,210,0.80);
+      --glass: rgba(255,252,248,0.55);
+      --glass-border: rgba(255,245,225,0.75);
+      --border: rgba(210,198,180,0.70);
+      --border2: rgba(222,212,195,0.60);
+      --text: #1a1510;
+      --text-dim: #a8998a;
+      --text-mid: #6b5e52;
+      --accent: #c2692a;
+      --accent-dim: rgba(194,105,42,0.10);
+      --accent-bright: #e07830;
+      --accent-glow: rgba(224,120,48,0.22);
+      --accent2: #3a6fa8;
+      --green: #1e7a4a;
+      --green-dim: rgba(30,122,74,0.10);
+      --red: #b83030;
+      --red-dim: rgba(184,48,48,0.10);
+      --shadow-xs: 0 1px 4px rgba(30,20,10,0.07), 0 1px 2px rgba(30,20,10,0.04);
+      --shadow-sm: 0 2px 12px rgba(30,20,10,0.09), 0 1px 4px rgba(30,20,10,0.05);
+      --shadow-md: 0 8px 32px rgba(30,20,10,0.12), 0 2px 8px rgba(30,20,10,0.06);
+      --shadow-glow: 0 4px 24px rgba(194,105,42,0.18), 0 1px 6px rgba(194,105,42,0.10);
     }
     *{margin:0;padding:0;box-sizing:border-box}
     html,body,#root{height:100%;overflow:hidden;background:var(--bg);color:var(--text)}
-    body{font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased}
-    ::-webkit-scrollbar{width:4px}
+    body{
+      font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:-0.01em;
+      -webkit-font-smoothing:antialiased;
+      background: radial-gradient(ellipse 140% 100% at 20% 10%, #f8ecd4 0%, #ede5cf 45%, #dfd4bc 100%);
+      background-attachment:fixed;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:160px 160px;opacity:0.030;
+    }
+    ::-webkit-scrollbar{width:3px}
     ::-webkit-scrollbar-track{background:transparent}
-    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-    ::-webkit-scrollbar-thumb:hover{background:var(--surface3)}
+    ::-webkit-scrollbar-thumb{background:rgba(194,105,42,0.22);border-radius:2px}
+    ::-webkit-scrollbar-thumb:hover{background:rgba(194,105,42,0.40)}
     input,select,textarea,button{font-family:inherit}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(194,105,42,0.28)}50%{box-shadow:0 0 0 6px rgba(194,105,42,0)}}
     @keyframes slideIndeterminate{
-      0%{width:0%;margin-left:0%}
-      50%{width:60%;margin-left:20%}
-      100%{width:0%;margin-left:100%}
+      0%{width:0%;margin-left:0%}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}
     }
-    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeInScale{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
     @keyframes landingFadeUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
     @keyframes float{0%,100%{transform:translateY(0px) rotateX(0deg)}50%{transform:translateY(-14px) rotateX(4deg)}}
     @keyframes spinSlow{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
     @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+    @keyframes liquidShimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
     @keyframes orbitA{from{transform:rotateZ(0deg) translateX(110px) rotateZ(0deg)}to{transform:rotateZ(360deg) translateX(110px) rotateZ(-360deg)}}
     @keyframes orbitB{from{transform:rotateZ(120deg) translateX(160px) rotateZ(-120deg)}to{transform:rotateZ(480deg) translateX(160px) rotateZ(-480deg)}}
     @keyframes orbitC{from{transform:rotateZ(240deg) translateX(210px) rotateZ(-240deg)}to{transform:rotateZ(600deg) translateX(210px) rotateZ(-600deg)}}
     @keyframes ringRotA{from{transform:rotateX(70deg) rotateZ(0deg)}to{transform:rotateX(70deg) rotateZ(360deg)}}
     @keyframes ringRotB{from{transform:rotateX(70deg) rotateZ(60deg)}to{transform:rotateX(70deg) rotateZ(420deg)}}
     @keyframes ringRotC{from{transform:rotateX(70deg) rotateZ(120deg)}to{transform:rotateX(70deg) rotateZ(480deg)}}
+    @keyframes glowBreath{
+      0%,100%{box-shadow:0 0 20px rgba(194,105,42,0.08),0 0 0 1px rgba(194,105,42,0.07)}
+      50%{box-shadow:0 0 50px rgba(194,105,42,0.20),0 0 0 1px rgba(194,105,42,0.16)}
+    }
     @keyframes glowPulse{0%,100%{box-shadow:0 0 40px rgba(194,105,42,0.12),0 0 80px rgba(194,105,42,0.04)}50%{box-shadow:0 0 60px rgba(194,105,42,0.22),0 0 120px rgba(194,105,42,0.08)}}
-    select option{background:#ffffff;color:#141210;font-family:'DM Sans',sans-serif}
+    @keyframes dropIn{from{opacity:0;transform:translateY(-10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    select option{background:#fff8ee;color:#1a1510;font-family:'DM Sans',sans-serif}
     button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .glass-lift{transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.22s ease}
+    .glass-lift:hover{transform:translateY(-2px);box-shadow:0 16px 48px rgba(30,20,10,0.14),0 2px 8px rgba(194,105,42,0.10),0 1px 0 rgba(255,255,255,0.85) inset}
   `
 
   return (
